@@ -1,4 +1,14 @@
-import { BaseEntity, BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
+import {
+  BaseEntity,
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Unique,
+  UpdateDateColumn,
+} from 'typeorm';
 import * as ELocation from './enums';
 
 @Entity()
@@ -21,7 +31,6 @@ export class Location extends BaseEntity {
 
   @Column({ type: 'float', nullable: false })
   lon: number;
-  
 
   /**
    * @description Enum location type
@@ -30,9 +39,9 @@ export class Location extends BaseEntity {
     type: 'enum',
     enum: ELocation.ELocationType,
     nullable: false,
-    insert: false
+    insert: false,
   })
-  type: ELocation.ELocationType
+  type: ELocation.ELocationType;
 
   @Column({ type: 'enum', nullable: false })
   locationName: string;
