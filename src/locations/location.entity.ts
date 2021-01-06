@@ -5,10 +5,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
+import { Point } from 'geojson';
 import * as ELocation from './enums';
 
 @Entity()
@@ -20,11 +22,13 @@ export class Location extends BaseEntity {
   /**
    * @description srid basic fields
    */
-  @Column({ type: 'point', srid: 4326, nullable: false })
-  srid: string;
-
-  @Column({ type: 'point', srid: 10004326, nullable: false })
-  detailSrid: string;
+  @Column({
+    type: 'geometry',
+    nullable: false,
+    spatialFeatureType: 'Point',
+    srid: 4326,
+  })
+  point: Point;
 
   @Column({ type: 'float', nullable: false })
   lat: number;
@@ -36,14 +40,13 @@ export class Location extends BaseEntity {
    * @description Enum location type
    */
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: ELocation.ELocationType,
     nullable: false,
-    insert: false,
   })
   type: ELocation.ELocationType;
 
-  @Column({ type: 'enum', nullable: false })
+  @Column({ type: 'varchar', nullable: false })
   locationName: string;
 
   @Column({ type: 'varchar', nullable: true })
