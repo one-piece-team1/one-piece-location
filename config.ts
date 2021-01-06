@@ -57,7 +57,7 @@ const configs = {
     API_EXPLORER_PATH: process.env.APPAPIEXPLORERPATH || '',
     // Server Setting
     HOST: process.env.APPHOST || 'localhost',
-    PORT: process.env.APPPORT || 7073,
+    PORT: process.env.APPPORT || 7074,
 
     EVENT_STORE_SETTINGS: {
       protocol: process.env.EVENTSTOREPROTOCOL || 'http',
@@ -79,9 +79,9 @@ const configs = {
       port: process.env.DBPORT || 5435,
       username: process.env.DBUSERNAME || 'postgres',
       password: process.env.DBPASSWORD || '123',
-      database: process.env.DBDATABASE || 'lib',
+      database: process.env.DBDATABASE || 'onepiece',
       schema: process.env.DBSCHEMA || 'public',
-      userTable: process.env.DBRATETABLE || 'onepiece',
+      userTable: process.env.DBRATETABLE || 'location',
     },
 
     REDIS_URL: process.env.REDIS_URL || "redis://127.0.0.1:6383",
@@ -93,10 +93,10 @@ const configs = {
   },
   development: {},
   production: {
-    PORT: process.env.APPPORT || 7073,
+    PORT: process.env.APPPORT || 7074,
   },
   test: {
-    PORT: 7073,
+    PORT: 7074,
   },
 };
 
