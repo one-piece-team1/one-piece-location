@@ -27,6 +27,14 @@ export class LocationRepository extends Repository<Location> {
     location.lon = lon;
     location.type = type;
     if (country) location.country = country;
+    location.point = {
+        type: 'Point',
+        coordinates: [location.lon, location.lat],
+      };
+      location.srid = {
+        type: 'Point',
+        coordinates: [location.lon, location.lat],
+      };
     try {
       await location.save();
     } catch (error) {

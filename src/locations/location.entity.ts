@@ -26,9 +26,16 @@ export class Location extends BaseEntity {
     type: 'geometry',
     nullable: false,
     spatialFeatureType: 'Point',
-    srid: 4326,
   })
   point: Point;
+
+  @Column({
+    type: 'geometry',
+    nullable: false,
+    spatialFeatureType: 'Point',
+    srid: 4326,
+  })
+  srid: Point;
 
   @Column({ type: 'float', nullable: false })
   lat: number;
