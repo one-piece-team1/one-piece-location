@@ -1,25 +1,16 @@
 import { join } from 'path';
 import { DBFFile } from 'dbffile';
-import { createConnection } from 'typeorm';
+import { createConnection, getManager } from 'typeorm';
 import { config } from '../../config';
 import { Logger } from '@nestjs/common';
-import * as ELocation from '../locations/enums'
-import * as JSONData from '../../datasets/routes/routes.json';
+import * as ELocation from '../locations/enums';
 import { Location } from '../locations/location.entity';
 
-interface IRoues {
-  [key: string]: any;
-}
-
-class dbfHandler {
+class DBFHandler {
   private readonly logger: Logger = new Logger('dbfHandler');
   private readonly portFilePath: string = join(
     process.cwd(),
     'datasets/ports/WPI.dbf',
-  );
-  private readonly routeFilePath: string = join(
-    process.cwd(),
-    'datasets/routes/routes.json',
   );
 
   constructor() {
@@ -45,7 +36,7 @@ class dbfHandler {
   /**
    * @description Read Port DBF Data and Save Data to Port Table
    */
-  public async readPort() {
+  public async generatePortData(): Promise<void> {
     const dbf = await DBFFile.open(this.portFilePath);
     const records = await dbf.readRecords();
     for (const record of records) {
@@ -65,24 +56,27 @@ class dbfHandler {
         type: 'Point',
         coordinates: [location.lon, location.lat],
       };
-      location.srid = {
+      location.pointSrid = {
         type: 'Point',
         coordinates: [location.lon, location.lat],
       };
       location
         .save()
         .then(res =>
-          this.logger.log(JSON.stringify(res), 'Create Seed location Data Success'),
+          this.logger.log(
+            JSON.stringify(res),
+            'Create Seed Port Data Success',
+          ),
         )
         .catch(err =>
-          this.logger.log(err.message, 'Create Seed location Data Fail'),
+          this.logger.log(err.message, 'Create Seed Port Data Fail'),
         );
     }
   }
 }
 
 function bootstrap() {
-  new dbfHandler().readPort();
+  return new DBFHandler().generatePortData();
 }
 
 bootstrap();

@@ -20,7 +20,7 @@ export class Location extends BaseEntity {
   id: string;
 
   /**
-   * @description srid basic fields
+   * @description location Point fields with point & srid & lon & lat
    */
   @Column({
     type: 'geometry',
@@ -35,7 +35,7 @@ export class Location extends BaseEntity {
     spatialFeatureType: 'Point',
     srid: 4326,
   })
-  srid: Point;
+  pointSrid: Point;
 
   @Column({ type: 'float', nullable: false })
   lat: number;
