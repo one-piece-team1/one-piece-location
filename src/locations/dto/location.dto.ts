@@ -1,10 +1,4 @@
-import {
-  IsIn,
-  IsNumber,
-  IsOptional,
-  IsString,
-  MinLength,
-} from 'class-validator';
+import { IsIn, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
 import * as ELocation from '../enums';
 
 export class CreateLocationDto {
@@ -18,13 +12,7 @@ export class CreateLocationDto {
   @IsNumber()
   lon: number;
 
-  @IsIn([
-    ELocation.ELocationType.COUNTRY,
-    ELocation.ELocationType.CITY,
-    ELocation.ELocationType.PORT,
-    ELocation.ELocationType.SCENE,
-    ELocation.ELocationType.TURN,
-  ])
+  @IsIn([ELocation.ELocationType.COUNTRY, ELocation.ELocationType.CITY, ELocation.ELocationType.PORT, ELocation.ELocationType.SCENE, ELocation.ELocationType.TURN])
   type: ELocation.ELocationType;
 
   @IsOptional()

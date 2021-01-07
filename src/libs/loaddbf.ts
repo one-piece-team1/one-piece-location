@@ -8,10 +8,7 @@ import { Location } from '../locations/location.entity';
 
 class DBFHandler {
   private readonly logger: Logger = new Logger('dbfHandler');
-  private readonly portFilePath: string = join(
-    process.cwd(),
-    'datasets/ports/WPI.dbf',
-  );
+  private readonly portFilePath: string = join(process.cwd(), 'datasets/ports/WPI.dbf');
 
   constructor() {
     this.init();
@@ -62,15 +59,8 @@ class DBFHandler {
       };
       location
         .save()
-        .then(res =>
-          this.logger.log(
-            JSON.stringify(res),
-            'Create Seed Port Data Success',
-          ),
-        )
-        .catch(err =>
-          this.logger.log(err.message, 'Create Seed Port Data Fail'),
-        );
+        .then((res) => this.logger.log(JSON.stringify(res), 'Create Seed Port Data Success'))
+        .catch((err) => this.logger.log(err.message, 'Create Seed Port Data Fail'));
     }
   }
 }
