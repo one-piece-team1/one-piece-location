@@ -1,4 +1,4 @@
-import { IsIn, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsIn, IsNumber, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 import * as ELocation from '../enums';
 
 export class CreateLocationDto {
@@ -17,4 +17,9 @@ export class CreateLocationDto {
 
   @IsOptional()
   country?: string;
+}
+
+export class GetLocationById {
+  @IsUUID()
+  id: string;
 }
