@@ -26,7 +26,7 @@ import { JwtStrategy } from 'strategy';
         algorithms: ['HS256'],
       },
     }),
-    TypeOrmModule.forFeature([LocationRepository])
+    TypeOrmModule.forFeature([LocationRepository]),
   ],
   controllers: [LocationController],
   providers: [LocationService, JwtStrategy],

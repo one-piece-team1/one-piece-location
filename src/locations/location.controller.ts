@@ -10,10 +10,8 @@ export class LocationController {
 
   @Get()
   @UseGuards(AuthGuard(['jwt']))
-  getRequest(
-    @CurrentUser() user: JwtPayload,
-  ): Promise<string> {
-    console.log('user', user)
+  getRequest(@CurrentUser() user: JwtPayload): Promise<string> {
+    console.log('user', user);
     return this.locationService.getRequest();
   }
 }
