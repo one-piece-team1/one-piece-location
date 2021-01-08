@@ -1,8 +1,9 @@
 import { ConflictException, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { EntityManager, EntityRepository, getManager, Repository } from 'typeorm';
+import { EntityManager, EntityRepository, getManager, Like, Repository } from 'typeorm';
 import { CreateLocationDto, GetLocationById } from './dto';
 import { Location } from './location.entity';
 import { IFindByIdQuery } from './interfaces';
+import { IQueryPaging, ISearch } from '../interfaces';
 
 @EntityRepository(Location)
 export class LocationRepository extends Repository<Location> {
@@ -55,6 +56,37 @@ export class LocationRepository extends Repository<Location> {
       const location: Location = await this.findOne(findOpts);
       if (!location) throw new NotFoundException();
       return location;
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async getLocationsWithNameSearch(searchReq: ISearch): Promise<{ locations: Location[]; count: number; take: number; skip: number }> {
+    const take: number = searchReq.take ? Number(searchReq.take) : 10;
+    const skip: number = searchReq.skip ? Number(searchReq.skip) : 0;
+
+    const searchOpts: IQueryPaging = {
+      take,
+      skip,
+      select: ['id', 'locationName', 'type', 'country', 'lat', 'lon'],
+      order: {
+        updatedAt: searchReq.sort,
+      },
+      where: {},
+    };
+
+    if (searchReq.keyword.length > 0) {
+      searchOpts.where.locationName = Like('%' + searchReq.keyword + '%');
+    }
+
+    try {
+      const [locations, count] = await this.repoManager.findAndCount(Location, searchOpts);
+      return {
+        locations,
+        take,
+        skip,
+        count,
+      };
     } catch (error) {
       throw new InternalServerErrorException();
     }
