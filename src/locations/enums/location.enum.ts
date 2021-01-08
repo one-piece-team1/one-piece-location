@@ -11,3 +11,8 @@ export enum ELicence {
   'GOOGLE' = 'google',
   'FACEBOOK' = 'facebook',
 }
+
+export enum ELocationCoordQueryMethod {
+  'SPECIFIC' = 'specific',
+  'RANGE' = 'range',
+}

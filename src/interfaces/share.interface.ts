@@ -7,6 +7,8 @@ export interface IPage {
 export interface ISearch extends IPage {
   keyword?: string;
   sort?: TSort;
+  locationName?: string;
+  countryCode?: string;
   [futureKey: string]: any;
 }
 

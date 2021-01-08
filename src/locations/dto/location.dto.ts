@@ -1,4 +1,4 @@
-import { IsIn, IsNumber, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import { IsIn, IsNumber, IsNumberString, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 import * as ELocation from '../enums';
 
 export class CreateLocationDto {
@@ -22,4 +22,19 @@ export class CreateLocationDto {
 export class GetLocationById {
   @IsUUID()
   id: string;
+}
+
+
+export class CoordQueryDto {
+  @IsNumberString()
+  lat: number;
+
+  @IsNumberString()
+  lon: number;
+
+  @IsIn([ELocation.ELocationCoordQueryMethod.SPECIFIC, ELocation.ELocationCoordQueryMethod.RANGE])
+  method: ELocation.ELocationCoordQueryMethod;
+
+  @IsOptional()
+  range?: number;
 }
