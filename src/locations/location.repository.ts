@@ -1,7 +1,8 @@
-import { ConflictException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { ConflictException, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { EntityManager, EntityRepository, getManager, Repository } from 'typeorm';
-import { CreateLocationDto } from './dto';
+import { CreateLocationDto, GetLocationById } from './dto';
 import { Location } from './location.entity';
+import { IFindByIdQuery } from './interfaces';
 
 @EntityRepository(Location)
 export class LocationRepository extends Repository<Location> {
@@ -35,5 +36,27 @@ export class LocationRepository extends Repository<Location> {
       }
     }
     return location;
+  }
+
+  /**
+   * @description Get location by primary key
+   * @public
+   * @param {GetLocationById} getLocationById
+   * @returns {Promise<Location>}
+   */
+  async getLocationById(getLocationById: GetLocationById): Promise<Location> {
+    const { id } = getLocationById;
+    const findOpts: IFindByIdQuery = {
+      where: {
+        id,
+      },
+    };
+    try {
+      const location: Location = await this.findOne(findOpts);
+      if (!location) throw new NotFoundException();
+      return location;
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
   }
 }

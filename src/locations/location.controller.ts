@@ -1,7 +1,9 @@
-import { Controller, Get, Param, ParseUUIDPipe, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from 'strategy/get-user.decorator';
 import { JwtPayload } from 'strategy/interfaces';
+import { GetLocationById } from './dto';
+import { ResponseBase } from './interfaces';
 import { LocationService } from './location.service';
 
 @Controller('locations')
@@ -13,5 +15,11 @@ export class LocationController {
   getRequest(@CurrentUser() user: JwtPayload): Promise<string> {
     console.log('user', user);
     return this.locationService.getRequest();
+  }
+
+  @Get('/:id')
+  @UseGuards(AuthGuard(['jwt']))
+  getLocationById(@CurrentUser() user: JwtPayload, @Param(ValidationPipe) getLocationById: GetLocationById): Promise<ResponseBase> {
+    return this.locationService.getLocationById(user, getLocationById);
   }
 }
