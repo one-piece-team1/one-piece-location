@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Lo
 import { InjectRepository } from '@nestjs/typeorm';
 import { ISearch } from '../interfaces';
 import { JwtPayload } from 'strategy/interfaces';
-import { GetLocationById } from './dto';
+import { CoordQueryDto, GetLocationById } from './dto';
 import { ResponseBase } from './interfaces';
 import { ELicence } from './enums';
 import { LocationRepository } from './location.repository';
@@ -69,7 +69,8 @@ export class LocationService {
     // if can not recognize user payload licence then throw not acceptable
     if (!Object.values(ELicence).includes(user.licence as ELicence)) throw new NotAcceptableException();
     // handling optional query params
-    if (!searchReq.keyword) searchReq.keyword = '';
+    if (!searchReq.locationName) searchReq.locationName = '';
+    if (!searchReq.countryCode) searchReq.countryCode = '';
     if (!searchReq.sort) searchReq.sort = 'DESC';
     try {
       const { locations, count, take, skip } = await this.locationRepository.getLocationsWithNameSearch(searchReq);
@@ -93,5 +94,13 @@ export class LocationService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  public async getLocationByCoords(user: JwtPayload, coordQueryDto: CoordQueryDto) {
+    // if can not recognize user payload then throw unauthorized
+    if (!user) throw new UnauthorizedException();
+    // if can not recognize user payload licence then throw not acceptable
+    if (!Object.values(ELicence).includes(user.licence as ELicence)) throw new NotAcceptableException();
+    return await this.locationRepository.getLocationByCoords(coordQueryDto);
   }
 }
