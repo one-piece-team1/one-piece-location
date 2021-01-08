@@ -24,7 +24,6 @@ export class GetLocationById {
   id: string;
 }
 
-
 export class CoordQueryDto {
   @IsNumberString()
   lat: number;
