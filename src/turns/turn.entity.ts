@@ -25,6 +25,15 @@ export class Turn extends BaseEntity {
   })
   lineStringSrid: LineString;
 
+  @Column({ type: 'float', nullable: false })
+  fromNode: number;
+
+  @Column({ type: 'float', nullable: false })
+  toNode: number;
+
+  @Column({ type: 'float', nullable: false })
+  length: number;
+
   /**
    * @description Time area
    */

@@ -7,7 +7,7 @@ import * as ELocation from '../locations/enums';
 import * as JSONData from '../../datasets/routes/routes.json';
 import { Location } from '../locations/location.entity';
 import { Turn } from '../turns/turn.entity';
-
+// import { HaversineFactory } from './haversine';
 interface IRoues {
   [key: string]: any;
 }
@@ -60,7 +60,13 @@ class DBFHandler {
     for (let i = 0; i < geoProperties.length; i++) {
       console.log('geoProperties: ', geoProperties[i]['geometry']);
       const coordinates: number[][] = geoProperties[i]['geometry'].coordinates as number[][];
+      const fromNode: number = geoProperties[i]['properties']['From Node0'] as number;
+      const toNode: number = geoProperties[i]['properties']['To Node0'] as number;
+      const length: number = geoProperties[i]['properties']['Length0'] as number;
       const turn = new Turn();
+      turn.fromNode = fromNode;
+      turn.toNode = toNode;
+      turn.length = length;
       turn.lineString = {
         type: 'LineString',
         coordinates,
