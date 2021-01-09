@@ -1,8 +1,9 @@
 import { join } from 'path';
 import { DBFFile } from 'dbffile';
 import { createConnection } from 'typeorm';
-import { config } from '../../config';
 import { Logger } from '@nestjs/common';
+import { nanoid } from 'nanoid';
+import { config } from '../../config';
 import * as ELocation from '../locations/enums';
 import * as JSONData from '../../datasets/routes/routes.json';
 import { Location } from '../locations/location.entity';
@@ -20,7 +21,7 @@ class DBFHandler {
    * @description Read Port DBF Data and Save Data to Port Table
    * @returns {Promise<void>}
    */
-  public async generatePortData(): Promise<void> {
+  public async generatePointsData(): Promise<void> {
     const dbf = await DBFFile.open(this.portFilePath);
     const records = await dbf.readRecords();
     for (const record of records) {
@@ -48,13 +49,47 @@ class DBFHandler {
         .then((res) => this.logger.log(JSON.stringify(res), 'Create Seed Port Data Success'))
         .catch((err) => this.logger.log(err.message, 'Create Seed Port Data Fail'));
     }
+
+    const geoJSONData = JSONData as IRoues;
+    const geoProperties = geoJSONData.default.features;
+    for (let i = 0; i < geoProperties.length; i++) {
+      const coordinates: number[][] = geoProperties[i]['geometry'].coordinates as number[][];
+      for (let j = 0; j < coordinates.length; j++) {
+        // locationName must be unique but dataset only have properties with id contains linestring each linestring must assign a id to be unique
+        const locationName: string = `${geoProperties[i]['properties'].id}::${nanoid(10)}` as string;
+        // for child point in linestring first elements is lontitude and second elements is latitude
+        const lat: number = geoProperties[i]['geometry'].coordinates[j][1] as number;
+        const lon: number = geoProperties[i]['geometry'].coordinates[j][0] as number;
+
+        const type: ELocation.ELocationType.TURN = 'turn' as ELocation.ELocationType.TURN;
+        const location = new Location();
+
+        location.locationName = locationName;
+        location.lat = lat;
+        location.lon = lon;
+        location.type = type;
+        location.point = {
+          type: 'Point',
+          coordinates: [location.lon, location.lat],
+        };
+        location.pointSrid = {
+          type: 'Point',
+          coordinates: [location.lon, location.lat],
+        };
+        location
+          .save()
+          .then((res) => this.logger.log(JSON.stringify(res), 'Create Seed Port Data Success'))
+          .catch((err) => this.logger.log(err.message, 'Create Seed Port Data Fail'));
+      }
+    }
   }
 
   /**
    * @description Read Sea Routes GeoJson Data and Save Data to Turn Table
+   * @deprecated
    * @returns {Promise<void>}
    */
-  public async generateRoutesData(): Promise<void> {
+  private async generateRoutesData(): Promise<void> {
     const geoJSONData = JSONData as IRoues;
     const geoProperties = geoJSONData.default.features;
     for (let i = 0; i < geoProperties.length; i++) {
@@ -92,8 +127,8 @@ class DBFHandler {
       synchronize: true,
     }).catch((err) => this.logger.log(err.message, 'Init'));
 
-    this.generatePortData();
-    this.generateRoutesData();
+    this.generatePointsData();
+    // this.generateRoutesData();
   }
 }
 

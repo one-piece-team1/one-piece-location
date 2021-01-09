@@ -5,6 +5,7 @@ import { Location } from './location.entity';
 import { IFindByIdQuery, ICoordQuerySpecifc, ICoordQueryRange } from './interfaces';
 import { IQueryPaging, ISearch } from '../interfaces';
 import { config } from '../../config';
+import { ELocationType } from './enums';
 
 @EntityRepository(Location)
 export class LocationRepository extends Repository<Location> {
@@ -54,9 +55,12 @@ export class LocationRepository extends Repository<Location> {
    */
   public async getLocationById(getLocationById: GetLocationById): Promise<Location> {
     const { id } = getLocationById;
+    // currently only allow to search, will open other type search in the future
+    const type: ELocationType.PORT = 'port' as ELocationType.PORT;
     const findOpts: IFindByIdQuery = {
       where: {
         id,
+        type,
       },
     };
     try {
@@ -77,6 +81,8 @@ export class LocationRepository extends Repository<Location> {
   public async getLocationsWithNameSearch(searchReq: ISearch): Promise<{ locations: Location[]; count: number; take: number; skip: number }> {
     const take: number = searchReq.take ? Number(searchReq.take) : 10;
     const skip: number = searchReq.skip ? Number(searchReq.skip) : 0;
+    // currently only allow to search, will open other type search in the future
+    const type: ELocationType.PORT = 'port' as ELocationType.PORT;
 
     const searchOpts: IQueryPaging = {
       take,
@@ -85,7 +91,9 @@ export class LocationRepository extends Repository<Location> {
       order: {
         updatedAt: searchReq.sort,
       },
-      where: {},
+      where: {
+        type,
+      },
     };
 
     if (searchReq.locationName.length > 0) {
@@ -135,7 +143,7 @@ export class LocationRepository extends Repository<Location> {
             (6371 * acos(cos(radians(${lat})) * cos(radians("lat"::float)) * cos(radians("lon"::float) - radians(${lon}) ) + sin(radians(${lat})) * sin(radians("lat"::float)))) as kilodistance
           from public.location
           where
-            ${coordQueryDto.range} > power(power("lat" - ${lat}, 2) + power("lon" - ${lon}, 2), .5)
+            ${coordQueryDto.range} > power(power("lat" - ${lat}, 2) + power("lon" - ${lon}, 2), .5) AND type = 'port'
           group by "id"
         )
         select
@@ -159,6 +167,7 @@ export class LocationRepository extends Repository<Location> {
         from ${config.DB_SETTINGS.schema}.${config.DB_SETTINGS.table}
         where "lat" = ${lat}
           and "lon" = ${lon}
+          and "type" = 'port'
       `;
     }
 
