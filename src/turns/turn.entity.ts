@@ -24,7 +24,7 @@ export class Turn extends BaseEntity {
   })
   lineStringSrid: LineString;
 
-  @Column({ type: 'text', nullable: false })
+  @Column({ type: 'simple-array', nullable: false })
   coordinates: unknown;
 
   @Column({ type: 'float', nullable: false })

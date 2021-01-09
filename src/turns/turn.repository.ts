@@ -122,6 +122,8 @@ export class TurnRepository extends Repository<Turn> {
                   search.fromNode = turn."fromNode"
                   AND search.toNode = turn."toNode"
               )
+            order by
+              "fromNode" asc
           `,
         )
         .then((res) => resolve(res))
