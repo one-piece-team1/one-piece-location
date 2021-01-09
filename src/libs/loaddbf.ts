@@ -67,6 +67,7 @@ class DBFHandler {
       turn.fromNode = fromNode;
       turn.toNode = toNode;
       turn.length = length;
+      turn.coordinates = coordinates;
       turn.lineString = {
         type: 'LineString',
         coordinates,

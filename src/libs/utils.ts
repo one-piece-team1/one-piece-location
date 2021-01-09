@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { LineString } from 'geojson';
 
 /**
  * @description Check Memory Info
@@ -53,4 +54,25 @@ export function isEmptyObj(obj: { [key: string]: any }): boolean {
     if (Object.prototype.hasOwnProperty.call(obj, property)) return false;
   }
   return true;
+}
+
+/**
+ * @description Convert coordinates string like to Linestring
+ * @public
+ * @param {string} coordinates
+ * @returns {LineString}
+ */
+export function coordinatesStringToLineString(coordinates: string): LineString {
+  const tempArr: string[] = coordinates.split(',');
+  const coords: number[][] = [];
+  for (let i = 0; i < tempArr.length; i += 2) {
+    /**
+     * @Important First element of the array is lontitude, and second of array is latitude
+     */
+    coords.push([Number(tempArr[i]), Number(tempArr[i + 1])]);
+  }
+  return {
+    type: 'LineString',
+    coordinates: coords,
+  };
 }

@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Req, UsePipes, ValidationPipe } from '@nestjs/common';
-import { CreateTurnDto } from './dto';
+import { Body, Controller, Get, Query, Req, UsePipes, ValidationPipe } from '@nestjs/common';
+import { CreateTurnDto, GetRoutePlanningDto } from './dto';
 import { TurnService } from './turn.service';
 import * as ITurn from './interfaces';
 
@@ -11,5 +11,10 @@ export class TurnController {
   @UsePipes(ValidationPipe)
   getRequest(@Body() createTurnDto: CreateTurnDto): Promise<ITurn.ResponseBase> {
     return this.turnService.postTrun(createTurnDto);
+  }
+
+  @Get('/plans')
+  getRoutesPlanning(@Query() getRoutePlanningDto: GetRoutePlanningDto): Promise<ITurn.ResponseBase> {
+    return this.turnService.getRoutePlanning(getRoutePlanningDto.endNode);
   }
 }

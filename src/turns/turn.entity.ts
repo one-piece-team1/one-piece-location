@@ -1,6 +1,5 @@
 import { BaseEntity, BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { LineString } from 'geojson';
-import * as ELocation from './enums';
 
 @Entity()
 export class Turn extends BaseEntity {
@@ -24,6 +23,9 @@ export class Turn extends BaseEntity {
     srid: 4326,
   })
   lineStringSrid: LineString;
+
+  @Column({ type: 'text', nullable: false })
+  coordinates: unknown;
 
   @Column({ type: 'float', nullable: false })
   fromNode: number;

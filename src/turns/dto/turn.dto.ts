@@ -14,3 +14,8 @@ export class CreateTurnDto {
   @IsArray()
   coordinates: number[][];
 }
+
+export class GetRoutePlanningDto {
+  @IsNumberString()
+  endNode: number;
+}
