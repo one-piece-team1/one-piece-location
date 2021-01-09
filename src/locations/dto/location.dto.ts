@@ -24,7 +24,15 @@ export class GetLocationById {
   id: string;
 }
 
-export class CoordQueryDto {
+export class PageQueryDto {
+  @IsOptional()
+  take?: number;
+
+  @IsOptional()
+  skip?: number;
+}
+
+export class CoordQueryDto extends PageQueryDto {
   @IsNumberString()
   lat: number;
 

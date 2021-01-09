@@ -109,7 +109,13 @@ export class LocationRepository extends Repository<Location> {
     }
   }
 
-  public async getLocationByCoords(coordQueryDto: CoordQueryDto): Promise<ICoordQuerySpecifc | ICoordQueryRange> {
+  /**
+   * @description Search Location with geo data
+   * @public
+   * @param {CoordQueryDto} coordQueryDto
+   * @returns {ICoordQuerySpecifc[] | ICoordQueryRange[]}
+   */
+  public async getLocationByCoords(coordQueryDto: CoordQueryDto): Promise<ICoordQuerySpecifc[] | ICoordQueryRange[]> {
     const { lat, lon, method } = coordQueryDto;
     let queryContent = '';
 
@@ -137,6 +143,8 @@ export class LocationRepository extends Repository<Location> {
           "kilodistance" * 0.62 as mileDistance
         from searhResult
         order by "kilodistance" ASC
+        limit ${coordQueryDto.take}
+        offset ${coordQueryDto.skip}
       `;
     } else {
       queryContent = `
@@ -154,7 +162,7 @@ export class LocationRepository extends Repository<Location> {
       `;
     }
 
-    return new Promise<ICoordQuerySpecifc | ICoordQueryRange>((resolve, reject) => {
+    return new Promise<ICoordQuerySpecifc[] | ICoordQueryRange[]>((resolve, reject) => {
       this.repoManager
         .query(queryContent)
         .then((res) => resolve(res))
