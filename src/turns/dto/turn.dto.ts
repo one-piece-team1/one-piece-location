@@ -6,5 +6,5 @@ export class CreateTurnDto {
   type: ELocation.ELocationType;
 
   @IsArray()
-  coordinates: number[][];
+  coordinates: number[];
 }

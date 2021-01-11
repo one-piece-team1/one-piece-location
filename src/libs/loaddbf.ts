@@ -46,7 +46,7 @@ class DBFHandler {
       };
       location
         .save()
-        .then((res) => this.logger.log(JSON.stringify(res), 'Create Seed Port Data Success'))
+        .then((res) => this.logger.log('Create Seed Port Data Success'))
         .catch((err) => this.logger.log(err.message, 'Create Seed Port Data Fail'));
     }
 
@@ -78,36 +78,46 @@ class DBFHandler {
         };
         location
           .save()
-          .then((res) => this.logger.log(JSON.stringify(res), 'Create Seed Port Data Success'))
-          .catch((err) => this.logger.log(err.message, 'Create Seed Port Data Fail'));
+          .then((res) => this.logger.log('Create Seed route linestring Data Success'))
+          .catch((err) => this.logger.log(err.message, 'Create Seed route linestring Data Fail'));
       }
     }
   }
 
   /**
    * @description Read Sea Routes GeoJson Data and Save Data to Turn Table
-   * @deprecated
    * @returns {Promise<void>}
    */
   private async generateRoutesData(): Promise<void> {
     const geoJSONData = JSONData as IRoues;
     const geoProperties = geoJSONData.default.features;
     for (let i = 0; i < geoProperties.length; i++) {
-      console.log('geoProperties: ', geoProperties[i]['geometry']);
       const coordinates: number[][] = geoProperties[i]['geometry'].coordinates as number[][];
-      const turn = new Turn();
-      turn.lineString = {
-        type: 'LineString',
-        coordinates,
-      };
-      turn.lineStringSrid = {
-        type: 'LineString',
-        coordinates,
-      };
-      turn
-        .save()
-        .then((res) => this.logger.log(JSON.stringify(res), 'Create Seed Routes Data Success'))
-        .catch((err) => this.logger.log(err.message, 'Create Seed Routes Data Fail'));
+      for (let j = 0; j < coordinates.length; j++) {
+        const locationName: string = `${geoProperties[i]['properties'].id}::${j}` as string;
+        // for child point in linestring first elements is lontitude and second elements is latitude
+        const lat: number = geoProperties[i]['geometry'].coordinates[j][1] as number;
+        const lon: number = geoProperties[i]['geometry'].coordinates[j][0] as number;
+        const turn = new Turn();
+        turn.name = locationName;
+        turn.point = {
+          type: 'Point',
+          coordinates: [lon, lat],
+        };
+        turn.srid = {
+          type: 'Point',
+          coordinates: [lon, lat],
+        };
+        turn.lat = lat;
+        turn.lon = lon;
+        turn.length = geoProperties[i]['properties']['Length0'];
+        turn.fromnode = geoProperties[i]['properties']['From Node0'];
+        turn.tonode = geoProperties[i]['properties']['To Node0'];
+        turn
+          .save()
+          .then((res) => this.logger.log('Create Seed route point Data Success'))
+          .catch((err) => this.logger.log(err.message, 'Create Seed route point Data Fail'));
+      }
     }
   }
 
@@ -128,7 +138,7 @@ class DBFHandler {
     }).catch((err) => this.logger.log(err.message, 'Init'));
 
     this.generatePointsData();
-    // this.generateRoutesData();
+    this.generateRoutesData();
   }
 }
 
