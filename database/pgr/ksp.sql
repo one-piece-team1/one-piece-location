@@ -14,10 +14,12 @@ WITH route_plan AS
 		SELECT
 			*
 		FROM
-			pgr_dijkstra(
+			pgr_ksp(
 				'select id, fromnode::int as source, tonode::int as target, length as cost from public.turn',
 				182391,
-				202502
+				202502,
+        1,
+        directed := TRUE
 			)
 	) AS route
 	ON 

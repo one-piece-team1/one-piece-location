@@ -3,8 +3,8 @@ CREATE
 OR REPLACE VIEW path_text AS
 SELECT
   *,
-  turn."srid" as startpoint,
-  turn."srid" as endpoint
+  ST_StartPoint(turn.srid) as startpoint,
+  ST_EndPoint(turn.srid) as endpoint
 FROM
   public.turn
 
