@@ -1,7 +1,7 @@
 import { ConflictException, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { EntityManager, EntityRepository, getManager, Like, Repository } from 'typeorm';
 import { CoordQueryDto, CreateLocationDto, GetLocationById } from './dto';
-import { Location } from './location.entity';
+import { Country, Location } from './relations';
 import { IFindByIdQuery, ICoordQuerySpecifc, ICoordQueryRange } from './interfaces';
 import { IQueryPaging, ISearch } from '../interfaces';
 import { config } from '../../config';
@@ -13,19 +13,34 @@ export class LocationRepository extends Repository<Location> {
   private readonly logger: Logger = new Logger('LocationRepository');
 
   /**
+   *
+   * @param createLocationDto
+   */
+  protected async createCountry(countryName: string, countryCode: string): Promise<Country> {
+    const country = new Country();
+    country.name = countryName;
+    country.code = countryCode;
+    try {
+      return await country.save();
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  /**
    * @description Create location but not open yet
    * @protected
    * @param {CreateLocationDto} createLocationDto
    * @returns {Promise<Location>}
    */
   protected async createLocation(createLocationDto: CreateLocationDto): Promise<Location> {
-    const { locationName, lat, lon, type, country } = createLocationDto;
+    const { locationName, lat, lon, type, countryName, countryCode } = createLocationDto;
     const location = new Location();
     location.locationName = locationName;
     location.lat = lat;
     location.lon = lon;
     location.type = type;
-    if (country) location.country = country;
+    if (countryCode && countryName) location.country = await this.createCountry(countryName, countryCode);
     location.point = {
       type: 'Point',
       coordinates: [location.lon, location.lat],

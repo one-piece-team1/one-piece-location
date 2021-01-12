@@ -6,7 +6,7 @@ import { CoordQueryDto, GetLocationById } from './dto';
 import { ICoordQueryRange, ICoordQuerySpecifc, ResponseBase } from './interfaces';
 import { ELicence } from './enums';
 import { LocationRepository } from './location.repository';
-import { Location } from './location.entity';
+import { Location } from './relations';
 
 @Injectable()
 export class LocationService {
