@@ -5,8 +5,8 @@ import * as ELocation from './enums';
 @Entity()
 @Unique(['locationName'])
 export class Location extends BaseEntity {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn('increment')
+  id: number;
 
   /**
    * @description location Point fields with point & srid & lon & lat
@@ -31,6 +31,9 @@ export class Location extends BaseEntity {
 
   @Column({ type: 'float', nullable: false })
   lon: number;
+
+  @Column({ type: 'float', nullable: true })
+  length?: number;
 
   /**
    * @description Enum location type

@@ -3,6 +3,7 @@ import * as ELocation from '../enums';
 export interface IFindByIdQuery {
   where?: {
     id?: string;
+    type: ELocation.ELocationType;
   };
 }
 

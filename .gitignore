@@ -53,3 +53,9 @@ ex.json
 # env
 *.env
 *.dev.env
+
+# sample code
+location-query/
+
+# location query sql
+database/
