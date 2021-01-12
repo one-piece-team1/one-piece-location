@@ -1,6 +1,5 @@
 import { BaseEntity, BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { LineString, Point, Position } from 'geojson';
-import * as ELocation from './enums';
+import { Point } from 'geojson';
 
 @Entity()
 export class Turn extends BaseEntity {

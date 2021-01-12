@@ -76,7 +76,7 @@ class DBFHandler {
       this.logger.log(location, 'Debug');
       location
         .save()
-        .then((res) => this.logger.log('Create Seed Port Data Success'))
+        .then(() => this.logger.log('Create Seed Port Data Success'))
         .catch((err) => this.logger.log(err.message, 'Create Seed Port Data Fail'));
     }
 
@@ -108,7 +108,7 @@ class DBFHandler {
         };
         location
           .save()
-          .then((res) => this.logger.log('Create Seed route linestring Data Success'))
+          .then(() => this.logger.log('Create Seed route linestring Data Success'))
           .catch((err) => this.logger.log(err.message, 'Create Seed route linestring Data Fail'));
       }
     }
@@ -145,7 +145,7 @@ class DBFHandler {
         turn.tonode = geoProperties[i]['properties']['To Node0'];
         turn
           .save()
-          .then((res) => this.logger.log('Create Seed route point Data Success'))
+          .then(() => this.logger.log('Create Seed route point Data Success'))
           .catch((err) => this.logger.log(err.message, 'Create Seed route point Data Fail'));
       }
     }
