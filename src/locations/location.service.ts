@@ -70,7 +70,7 @@ export class LocationService {
     if (!Object.values(ELicence).includes(user.licence as ELicence)) throw new NotAcceptableException();
     // handling optional query params
     if (!searchReq.locationName) searchReq.locationName = '';
-    if (!searchReq.countryCode) searchReq.countryCode = '';
+    if (!searchReq.countryName) searchReq.countryName = '';
     if (!searchReq.sort) searchReq.sort = 'DESC';
     try {
       const { locations, count, take, skip } = await this.locationRepository.getLocationsWithNameSearch(searchReq);

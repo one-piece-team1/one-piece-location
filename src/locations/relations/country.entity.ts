@@ -3,8 +3,8 @@ import { BaseEntity, BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entit
 @Entity()
 @Unique(['name', 'code'])
 export class Country extends BaseEntity {
-  @PrimaryGeneratedColumn('increment')
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'varchar', nullable: false })
   name: string;
