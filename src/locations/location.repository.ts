@@ -114,21 +114,21 @@ export class LocationRepository extends Repository<Location> {
       left join public.country pc on pc.id = location."countryId"
       where 
         location.type = 'port'
-    `
+    `;
 
     if (searchReq.locationName.length > 0) {
-      searchQuery += `and location."locationName" like '%${searchReq.locationName}%'`
+      searchQuery += `and location."locationName" like '%${searchReq.locationName}%'`;
     }
 
     if (searchReq.countryName.length > 0) {
-      searchQuery += `and pc."name" like '%${searchReq.countryName}%'`
+      searchQuery += `and pc."name" like '%${searchReq.countryName}%'`;
     }
 
     searchQuery += `
       order by location."updatedAt" ${searchReq.sort}
       limit ${take}
       offset ${skip}
-    `
+    `;
 
     try {
       const result: Location[] = await this.repoManager.query(searchQuery);
@@ -140,7 +140,7 @@ export class LocationRepository extends Repository<Location> {
         count: Number(result[0] ? result[0]['cnt'] : '0'),
       };
     } catch (error) {
-      this.logger.log(error.message)
+      this.logger.log(error.message);
       throw new InternalServerErrorException();
     }
   }
@@ -214,8 +214,8 @@ export class LocationRepository extends Repository<Location> {
         .query(queryContent)
         .then((res) => resolve(res))
         .catch((err) => {
-          this.logger.log(err.message)
-          reject(err.message)
+          this.logger.log(err.message);
+          reject(err.message);
         });
     });
   }
