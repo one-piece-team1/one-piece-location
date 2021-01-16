@@ -79,39 +79,6 @@ class DBFHandler {
         .then(() => this.logger.log('Create Seed Port Data Success'))
         .catch((err) => this.logger.log(err.message, 'Create Seed Port Data Fail'));
     }
-
-    const geoJSONData = RoutesData as IRoues;
-    const geoProperties = geoJSONData.default.features;
-    for (let i = 0; i < geoProperties.length; i++) {
-      const coordinates: number[][] = geoProperties[i]['geometry'].coordinates as number[][];
-      for (let j = 0; j < coordinates.length; j++) {
-        // locationName must be unique but dataset only have properties with id contains linestring each linestring must assign a id to be unique
-        const locationName: string = `${geoProperties[i]['properties'].id}::${nanoid(10)}` as string;
-        // for child point in linestring first elements is lontitude and second elements is latitude
-        const lat: number = geoProperties[i]['geometry'].coordinates[j][1] as number;
-        const lon: number = geoProperties[i]['geometry'].coordinates[j][0] as number;
-
-        const type: ELocation.ELocationType.TURN = 'turn' as ELocation.ELocationType.TURN;
-        const location = new Location();
-
-        location.locationName = locationName;
-        location.lat = lat;
-        location.lon = lon;
-        location.type = type;
-        location.point = {
-          type: 'Point',
-          coordinates: [location.lon, location.lat],
-        };
-        location.pointSrid = {
-          type: 'Point',
-          coordinates: [location.lon, location.lat],
-        };
-        location
-          .save()
-          .then(() => this.logger.log('Create Seed route linestring Data Success'))
-          .catch((err) => this.logger.log(err.message, 'Create Seed route linestring Data Fail'));
-      }
-    }
   }
 
   /**
