@@ -1,12 +1,12 @@
-import { ConflictException, InternalServerErrorException, Logger } from '@nestjs/common';
-import { EntityManager, EntityRepository, getManager, Repository } from 'typeorm';
+import { InternalServerErrorException } from '@nestjs/common';
+import { EntityRepository, Repository } from 'typeorm';
 import { CreateTurnDto } from './dto';
 import { Turn } from './turn.entity';
 
 @EntityRepository(Turn)
 export class TurnRepository extends Repository<Turn> {
   async createTurn(createTurnDto: CreateTurnDto): Promise<Turn> {
-    const { type, coordinates } = createTurnDto;
+    const { coordinates } = createTurnDto;
     const lat: number = coordinates[1];
     const lon: number = coordinates[0];
     const turn = new Turn();

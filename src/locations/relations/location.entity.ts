@@ -1,6 +1,7 @@
-import { BaseEntity, BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
+import { BaseEntity, BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import { Point } from 'geojson';
-import * as ELocation from './enums';
+import * as ELocation from '../enums';
+import { Country } from './country.entity';
 
 @Entity()
 @Unique(['locationName'])
@@ -24,6 +25,7 @@ export class Location extends BaseEntity {
     spatialFeatureType: 'Point',
     srid: 4326,
   })
+  @Index({ spatial: true })
   pointSrid: Point;
 
   @Column({ type: 'float', nullable: false })
@@ -48,8 +50,9 @@ export class Location extends BaseEntity {
   @Column({ type: 'varchar', nullable: false })
   locationName: string;
 
-  @Column({ type: 'varchar', nullable: true })
-  country?: string;
+  @ManyToOne(() => Country, { cascade: true, nullable: true })
+  @JoinColumn()
+  country?: Country;
 
   /**
    * @description Time area

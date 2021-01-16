@@ -1,21 +1,49 @@
 import { join } from 'path';
 import { DBFFile } from 'dbffile';
-import { createConnection } from 'typeorm';
+import { createConnection, getManager } from 'typeorm';
 import { Logger } from '@nestjs/common';
 import { nanoid } from 'nanoid';
 import { config } from '../../config';
 import * as ELocation from '../locations/enums';
-import * as JSONData from '../../datasets/routes/routes.json';
-import { Location } from '../locations/location.entity';
+import * as RoutesData from '../../datasets/routes/routes.json';
+import * as CountriesData from '../../datasets/countries/country.json';
+import { Location, Country } from '../locations/relations';
 import { Turn } from '../turns/turn.entity';
 
 interface IRoues {
   [key: string]: any;
 }
 
+interface ICountry {
+  name: string;
+  code: string;
+  [futureKey: string]: any;
+}
+
 class DBFHandler {
   private readonly logger: Logger = new Logger('dbfHandler');
   private readonly portFilePath: string = join(process.cwd(), 'datasets/ports/WPI.dbf');
+
+  /**
+   * @description Get or create Country
+   * @private
+   * @param {string} code
+   * @returns {Promise<Country>}
+   */
+  private async getCountry(code: string): Promise<Country> {
+    const countriesData = CountriesData['default'] as ICountry[];
+    const countryData = countriesData.filter((country) => country.code === code);
+    if (countryData.length > 0) {
+      const country = await getManager().findOne(Country, { where: { code } });
+      if (!country) {
+        const country = new Country();
+        country.name = countryData[0].name;
+        country.code = countryData[0].code;
+        return await country.save();
+      }
+      return country;
+    }
+  }
 
   /**
    * @description Read Port DBF Data and Save Data to Port Table
@@ -24,7 +52,8 @@ class DBFHandler {
   public async generatePointsData(): Promise<void> {
     const dbf = await DBFFile.open(this.portFilePath);
     const records = await dbf.readRecords();
-    for (const record of records) {
+    for (let i = 0; i < records.length; i++) {
+      const record = records[i];
       const locationName: string = record['PORT_NAME'] as string;
       const lat: number = record['LATITUDE'] as number;
       const lon: number = record['LONGITUDE'] as number;
@@ -35,7 +64,7 @@ class DBFHandler {
       location.lat = lat;
       location.lon = lon;
       location.type = type;
-      location.country = country;
+      location.country = await this.getCountry(country);
       location.point = {
         type: 'Point',
         coordinates: [location.lon, location.lat],
@@ -44,13 +73,14 @@ class DBFHandler {
         type: 'Point',
         coordinates: [location.lon, location.lat],
       };
+      this.logger.log(location, 'Debug');
       location
         .save()
-        .then((res) => this.logger.log('Create Seed Port Data Success'))
+        .then(() => this.logger.log('Create Seed Port Data Success'))
         .catch((err) => this.logger.log(err.message, 'Create Seed Port Data Fail'));
     }
 
-    const geoJSONData = JSONData as IRoues;
+    const geoJSONData = RoutesData as IRoues;
     const geoProperties = geoJSONData.default.features;
     for (let i = 0; i < geoProperties.length; i++) {
       const coordinates: number[][] = geoProperties[i]['geometry'].coordinates as number[][];
@@ -78,7 +108,7 @@ class DBFHandler {
         };
         location
           .save()
-          .then((res) => this.logger.log('Create Seed route linestring Data Success'))
+          .then(() => this.logger.log('Create Seed route linestring Data Success'))
           .catch((err) => this.logger.log(err.message, 'Create Seed route linestring Data Fail'));
       }
     }
@@ -89,7 +119,7 @@ class DBFHandler {
    * @returns {Promise<void>}
    */
   private async generateRoutesData(): Promise<void> {
-    const geoJSONData = JSONData as IRoues;
+    const geoJSONData = RoutesData as IRoues;
     const geoProperties = geoJSONData.default.features;
     for (let i = 0; i < geoProperties.length; i++) {
       const coordinates: number[][] = geoProperties[i]['geometry'].coordinates as number[][];
@@ -115,7 +145,7 @@ class DBFHandler {
         turn.tonode = geoProperties[i]['properties']['To Node0'];
         turn
           .save()
-          .then((res) => this.logger.log('Create Seed route point Data Success'))
+          .then(() => this.logger.log('Create Seed route point Data Success'))
           .catch((err) => this.logger.log(err.message, 'Create Seed route point Data Fail'));
       }
     }
@@ -133,7 +163,7 @@ class DBFHandler {
       username: config.DB_SETTINGS.username,
       password: config.DB_SETTINGS.password,
       database: config.DB_SETTINGS.database,
-      entities: [Location, Turn],
+      entities: [Location, Turn, Country],
       synchronize: true,
     }).catch((err) => this.logger.log(err.message, 'Init'));
 

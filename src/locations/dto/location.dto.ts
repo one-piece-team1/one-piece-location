@@ -16,7 +16,10 @@ export class CreateLocationDto {
   type: ELocation.ELocationType;
 
   @IsOptional()
-  country?: string;
+  countryName?: string;
+
+  @IsOptional()
+  countryCode?: string;
 }
 
 export class GetLocationById {

@@ -1,7 +1,7 @@
 import { ConflictException, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { EntityManager, EntityRepository, getManager, Like, Repository } from 'typeorm';
 import { CoordQueryDto, CreateLocationDto, GetLocationById } from './dto';
-import { Location } from './location.entity';
+import { Country, Location } from './relations';
 import { IFindByIdQuery, ICoordQuerySpecifc, ICoordQueryRange } from './interfaces';
 import { IQueryPaging, ISearch } from '../interfaces';
 import { config } from '../../config';
@@ -13,19 +13,34 @@ export class LocationRepository extends Repository<Location> {
   private readonly logger: Logger = new Logger('LocationRepository');
 
   /**
+   *
+   * @param createLocationDto
+   */
+  protected async createCountry(countryName: string, countryCode: string): Promise<Country> {
+    const country = new Country();
+    country.name = countryName;
+    country.code = countryCode;
+    try {
+      return await country.save();
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  /**
    * @description Create location but not open yet
    * @protected
    * @param {CreateLocationDto} createLocationDto
    * @returns {Promise<Location>}
    */
   protected async createLocation(createLocationDto: CreateLocationDto): Promise<Location> {
-    const { locationName, lat, lon, type, country } = createLocationDto;
+    const { locationName, lat, lon, type, countryName, countryCode } = createLocationDto;
     const location = new Location();
     location.locationName = locationName;
     location.lat = lat;
     location.lon = lon;
     location.type = type;
-    if (country) location.country = country;
+    if (countryCode && countryName) location.country = await this.createCountry(countryName, countryCode);
     location.point = {
       type: 'Point',
       coordinates: [location.lon, location.lat],
@@ -84,35 +99,48 @@ export class LocationRepository extends Repository<Location> {
     // currently only allow to search, will open other type search in the future
     const type: ELocationType.PORT = 'port' as ELocationType.PORT;
 
-    const searchOpts: IQueryPaging = {
-      take,
-      skip,
-      select: ['id', 'locationName', 'type', 'country', 'lat', 'lon'],
-      order: {
-        updatedAt: searchReq.sort,
-      },
-      where: {
-        type,
-      },
-    };
+    let searchQuery = `
+      select
+        location.id,
+        location."locationName" as "locationName",
+        location.type,
+        pc.code as "countryCode",
+        pc.name as "countryName",
+        location.lat as "latitude",
+        location.lon as "lontitude",
+        count(*) OVER() AS "cnt"
+      from 
+        public.location
+      left join public.country pc on pc.id = location."countryId"
+      where 
+        location.type = 'port'
+    `;
 
     if (searchReq.locationName.length > 0) {
-      searchOpts.where.locationName = Like('%' + searchReq.locationName + '%');
+      searchQuery += `and location."locationName" like '%${searchReq.locationName}%'`;
     }
 
-    if (searchReq.countryCode.length > 0) {
-      searchOpts.where.country = Like('%' + searchReq.countryCode + '%');
+    if (searchReq.countryName.length > 0) {
+      searchQuery += `and pc."name" like '%${searchReq.countryName}%'`;
     }
+
+    searchQuery += `
+      order by location."updatedAt" ${searchReq.sort}
+      limit ${take}
+      offset ${skip}
+    `;
 
     try {
-      const [locations, count] = await this.repoManager.findAndCount(Location, searchOpts);
+      const result: Location[] = await this.repoManager.query(searchQuery);
+
       return {
-        locations,
+        locations: result,
         take,
         skip,
-        count,
+        count: Number(result[0] ? result[0]['cnt'] : '0'),
       };
     } catch (error) {
+      this.logger.log(error.message);
       throw new InternalServerErrorException();
     }
   }
@@ -131,7 +159,7 @@ export class LocationRepository extends Repository<Location> {
       // represent kilometers for line distrance not
       if (!coordQueryDto.range) coordQueryDto.range = 1;
       queryContent = `
-        with searhResult as (
+        with searchResult as (
           select
             "id",
             "pointSrid",
@@ -139,9 +167,10 @@ export class LocationRepository extends Repository<Location> {
             "lon",
             "type",
             "locationName",
-            "country",
+            "countryId",
             (6371 * acos(cos(radians(${lat})) * cos(radians("lat"::float)) * cos(radians("lon"::float) - radians(${lon}) ) + sin(radians(${lat})) * sin(radians("lat"::float)))) as kilodistance
-          from public.location
+          from 
+            public.location
           where
             ${coordQueryDto.range} > power(power("lat" - ${lat}, 2) + power("lon" - ${lon}, 2), .5) AND type = 'port'
           group by "id"
@@ -149,25 +178,34 @@ export class LocationRepository extends Repository<Location> {
         select
           *,
           "kilodistance" * 0.62 as mileDistance
-        from searhResult
+        from 
+          searchResult
+        left join public.country pc on pc.id = searchResult."countryId"
         order by "kilodistance" ASC
         limit ${coordQueryDto.take}
         offset ${coordQueryDto.skip}
       `;
     } else {
       queryContent = `
+        with searchResult as (
+          select
+            "id",
+            "pointSrid",
+            "lat",
+            "lon",
+            "type",
+            "locationName",
+            "countryId"
+          from 
+            public.location
+          where "lat" = ${lat}
+            and "lon" = ${lon}
+            and "type" = 'port'
+        )
         select
-          "id",
-          "pointSrid",
-          "lat",
-          "lon",
-          "type",
-          "locationName",
-          "country"
-        from ${config.DB_SETTINGS.schema}.${config.DB_SETTINGS.table}
-        where "lat" = ${lat}
-          and "lon" = ${lon}
-          and "type" = 'port'
+          *
+        from searchResult
+        left join public.country pc on pc.id = searchResult."countryId"
       `;
     }
 
@@ -175,7 +213,10 @@ export class LocationRepository extends Repository<Location> {
       this.repoManager
         .query(queryContent)
         .then((res) => resolve(res))
-        .catch((err) => reject(err.message));
+        .catch((err) => {
+          this.logger.log(err.message);
+          reject(err.message);
+        });
     });
   }
 }
