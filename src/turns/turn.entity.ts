@@ -1,5 +1,5 @@
 import { BaseEntity, BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { Point } from 'geojson';
+import { Point, LineString } from 'geojson';
 
 @Entity()
 export class Turn extends BaseEntity {
@@ -15,33 +15,19 @@ export class Turn extends BaseEntity {
   @Column({
     type: 'geometry',
     nullable: false,
-    spatialFeatureType: 'Point',
+    spatialFeatureType: 'LineString',
     srid: 4326,
   })
   @Index({ spatial: true })
-  point: Point;
+  geom: LineString;
 
   @Column({
     type: 'geometry',
     nullable: false,
-    spatialFeatureType: 'Point',
+    spatialFeatureType: 'LineString',
     srid: 4326,
-    transformer: {
-      to(value: Point): Point {
-        return value;
-      },
-      from(value: { coordinates: number[] }): Point {
-        return { type: 'Point', coordinates: value.coordinates };
-      },
-    },
   })
-  srid: Point;
-
-  @Column({ type: 'float', nullable: false })
-  lat: number;
-
-  @Column({ type: 'float', nullable: false })
-  lon: number;
+  srid: LineString;
 
   @Column({ type: 'float', nullable: true })
   length?: number;

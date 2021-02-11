@@ -10,14 +10,4 @@ export class TurnService {
     @InjectRepository(TurnRepository)
     private turnRepository: TurnRepository,
   ) {}
-
-  public async postTrun(createTurnDto: CreateTurnDto): Promise<ITurn.ResponseBase> {
-    const turn = await this.turnRepository.createTurn(createTurnDto);
-    if (!turn) throw new ConflictException();
-    return {
-      statusCode: 200,
-      status: 'success',
-      message: 'Turn Create Success',
-    };
-  }
 }

@@ -2,7 +2,7 @@ import { join } from 'path';
 import { DBFFile } from 'dbffile';
 import { createConnection, getManager } from 'typeorm';
 import { Logger } from '@nestjs/common';
-import { nanoid } from 'nanoid';
+import { Point, LineString } from 'geojson';
 import { config } from '../../config';
 import * as ELocation from '../locations/enums';
 import * as RoutesData from '../../datasets/routes/routes.json';
@@ -89,32 +89,19 @@ class DBFHandler {
     const geoJSONData = RoutesData as IRoues;
     const geoProperties = geoJSONData.default.features;
     for (let i = 0; i < geoProperties.length; i++) {
-      const coordinates: number[][] = geoProperties[i]['geometry'].coordinates as number[][];
-      for (let j = 0; j < coordinates.length; j++) {
-        const locationName: string = `${geoProperties[i]['properties'].id}::${j}` as string;
-        // for child point in linestring first elements is lontitude and second elements is latitude
-        const lat: number = geoProperties[i]['geometry'].coordinates[j][1] as number;
-        const lon: number = geoProperties[i]['geometry'].coordinates[j][0] as number;
-        const turn = new Turn();
-        turn.name = locationName;
-        turn.point = {
-          type: 'Point',
-          coordinates: [lon, lat],
-        };
-        turn.srid = {
-          type: 'Point',
-          coordinates: [lon, lat],
-        };
-        turn.lat = lat;
-        turn.lon = lon;
-        turn.length = geoProperties[i]['properties']['Length0'];
-        turn.fromnode = geoProperties[i]['properties']['From Node0'];
-        turn.tonode = geoProperties[i]['properties']['To Node0'];
-        turn
+      const lineString: LineString = geoProperties[i]['geometry'] as LineString;
+      const turn = new Turn();
+      const locationName: string = `${geoProperties[i]['properties'].id}` as string;
+      turn.name = locationName;
+      turn.geom = lineString;
+      turn.srid = lineString;
+      turn.length = geoProperties[i]['properties']['Length0'];
+      turn.fromnode = Number(geoProperties[i]['properties']['From Node0']);
+      turn.tonode = Number(geoProperties[i]['properties']['To Node0'])
+      turn
           .save()
           .then(() => this.logger.log('Create Seed route point Data Success'))
           .catch((err) => this.logger.log(err.message, 'Create Seed route point Data Fail'));
-      }
     }
   }
 
