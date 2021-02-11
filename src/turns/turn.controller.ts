@@ -6,4 +6,9 @@ import * as ITurn from './interfaces';
 @Controller('turns')
 export class TurnController {
   constructor(private readonly turnService: TurnService) {}
+
+  @Get('/plans')
+  getRoutesPlanning() {
+    return this.turnService.getRoutesPlanning();
+  }
 }

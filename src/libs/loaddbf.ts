@@ -97,11 +97,11 @@ class DBFHandler {
       turn.srid = lineString;
       turn.length = geoProperties[i]['properties']['Length0'];
       turn.fromnode = Number(geoProperties[i]['properties']['From Node0']);
-      turn.tonode = Number(geoProperties[i]['properties']['To Node0'])
+      turn.tonode = Number(geoProperties[i]['properties']['To Node0']);
       turn
-          .save()
-          .then(() => this.logger.log('Create Seed route point Data Success'))
-          .catch((err) => this.logger.log(err.message, 'Create Seed route point Data Fail'));
+        .save()
+        .then(() => this.logger.log('Create Seed route point Data Success'))
+        .catch((err) => this.logger.log(err.message, 'Create Seed route point Data Fail'));
     }
   }
 
