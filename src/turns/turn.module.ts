@@ -27,7 +27,7 @@ import { UserRepository } from '../users/user.repository';
         algorithms: ['HS256'],
       },
     }),
-    TypeOrmModule.forFeature([TurnRepository, UserRepository])
+    TypeOrmModule.forFeature([TurnRepository, UserRepository]),
   ],
   controllers: [TurnController],
   providers: [TurnService, JwtStrategy],
