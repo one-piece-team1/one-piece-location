@@ -10,7 +10,13 @@ export class TurnRepository extends Repository<Turn> {
   private readonly logger: Logger = new Logger('TurnRepository');
   private readonly repoManager: EntityManager = getManager();
 
-  getNearestLineStringQuery(locationId: string): string {
+  /**
+   * @description Get nearest linestring query func
+   * @private
+   * @param {string} locationId
+   * @returns {string}
+   */
+  private getNearestLineStringQuery(locationId: string): string {
     return `
       -- get turn result for each linestring
       WITH turn_result AS (
@@ -62,7 +68,13 @@ export class TurnRepository extends Repository<Turn> {
     `;
   }
 
-  getRoutePlanAsTextQuery(searchRoutePlansDto: SearchRoutePlansDto): string {
+  /**
+   * @description Get route plan with result using ST_AsText to transform and return reversed Geomertry::Geomertry data
+   * @private
+   * @param {SearchRoutePlansDto} searchRoutePlansDto
+   * @returns {string}
+   */
+  private getRoutePlanAsTextQuery(searchRoutePlansDto: SearchRoutePlansDto): string {
     return `
       WITH route_plan AS
       (
@@ -101,7 +113,13 @@ export class TurnRepository extends Repository<Turn> {
     `;
   }
 
-  getRoutePlanMakeLineQuery(searchRoutePlansDto: SearchRoutePlansDto): string {
+  /**
+   * @description Get route plan with result using ST_MakeLine to retrun Spatial plain text to reduce bandwidth
+   * @private
+   * @param {SearchRoutePlansDto} searchRoutePlansDto
+   * @returns {string}
+   */
+  private getRoutePlanMakeLineQuery(searchRoutePlansDto: SearchRoutePlansDto): string {
     return `
       WITH route_plan AS
       (
@@ -139,7 +157,14 @@ export class TurnRepository extends Repository<Turn> {
     `;
   }
 
-  async getNearestPlanLineString(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<ITurn.INearestNodeQueryResponse> {
+  /**
+   * @description Get nearest linestring node for each start and end point from location to connected to linestring for dijkstra calcuation
+   * @Admin
+   * @public
+   * @param {SearchForPlanStartandEndPointDto} searchForPlanStartandEndPointDto
+   * @returns {Promise<ITurn.INearestNodeQueryResponse>}
+   */
+  public async getNearestPlanLineString(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<ITurn.INearestNodeQueryResponse> {
     try {
       const nearestLineStringResult: ITurn.INearestNodeQueryResponse = {};
       const startNodes = await this.repoManager.query(this.getNearestLineStringQuery(searchForPlanStartandEndPointDto.startId));
@@ -154,6 +179,13 @@ export class TurnRepository extends Repository<Turn> {
     }
   }
 
+  /**
+   * @description Get short path routes plannnig using pg_routing build-in library
+   * @Admin
+   * @public
+   * @param {SearchRoutePlansDto} searchRoutePlansDto
+   * @returns {Promise<ITurn.INetworkGeometryResponse[]>}
+   */
   async getRoutesPlanning(searchRoutePlansDto: SearchRoutePlansDto): Promise<ITurn.INetworkGeometryResponse[]> {
     try {
       if (searchRoutePlansDto.type === ETurn.EPlanType.TEXT) {
@@ -166,6 +198,12 @@ export class TurnRepository extends Repository<Turn> {
     }
   }
 
+  /**
+   * @description Generate Route planning with binding nearest linestring searching and calc dijkstra
+   * @public
+   * @param {SearchForPlanStartandEndPointDto} searchForPlanStartandEndPointDto
+   * @returns {Promise<ITurn.INetworkGeometryResponse[]>}
+   */
   async generateRoutesPlanning(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<ITurn.INetworkGeometryResponse[]> {
     try {
       const nearestNodes = await this.getNearestPlanLineString(searchForPlanStartandEndPointDto);
