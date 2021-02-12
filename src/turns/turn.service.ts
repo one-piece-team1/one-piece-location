@@ -1,6 +1,6 @@
 import { ConflictException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateTurnDto } from './dto';
+import { CreateTurnDto, SearchForPlanStartandEndPointDto, SearchRoutePlansDto } from './dto';
 import { TurnRepository } from './turn.repository';
 import * as utils from '../libs/utils';
 import * as ITurn from './interfaces';
@@ -12,8 +12,12 @@ export class TurnService {
     private turnRepository: TurnRepository,
   ) {}
 
-  public async getRoutesPlanning(): Promise<ITurn.INetworkGeometryResponse[]> {
-    const turns: ITurn.INetworkGeometryResponse[] = await this.turnRepository.getRoutesPlanning();
+  public async getRouteStartandEndNodes(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto) {
+    return await this.turnRepository.getNearestPlanLineString(searchForPlanStartandEndPointDto);
+  }
+
+  public async getRoutesPlanning(searchRoutePlansDto: SearchRoutePlansDto): Promise<ITurn.INetworkGeometryResponse[]> {
+    const turns: ITurn.INetworkGeometryResponse[] = await this.turnRepository.getRoutesPlanning(searchRoutePlansDto);
     if (!(turns instanceof Array))
       throw new HttpException(
         {
