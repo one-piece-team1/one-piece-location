@@ -7,6 +7,7 @@ import { LocationRepository } from './location.repository';
 import { LocationService } from './location.service';
 import { config } from '../../config';
 import { JwtStrategy } from 'strategy';
+import { UserRepository } from '../users/user.repository';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { JwtStrategy } from 'strategy';
         algorithms: ['HS256'],
       },
     }),
-    TypeOrmModule.forFeature([LocationRepository]),
+    TypeOrmModule.forFeature([LocationRepository, UserRepository]),
   ],
   controllers: [LocationController],
   providers: [LocationService, JwtStrategy],
