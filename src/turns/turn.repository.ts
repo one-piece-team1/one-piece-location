@@ -38,12 +38,13 @@ export class TurnRepository extends Repository<Turn> {
               -- Get geometry point data from location
               SELECT
                 point
-              from
+              FROM
                 location
-              where
+              WHERE
                 id = '${locationId}'
             ),
-            geometries
+            geometries,
+            true
           )
         ),
         *
@@ -56,12 +57,13 @@ export class TurnRepository extends Repository<Turn> {
           (
             SELECT
               point
-            from
+            FROM
               location
-            where
+            WHERE
               id = '${locationId}'
           ),
-          geometries
+          geometries,
+          true
         )
       LIMIT
         1;
@@ -80,7 +82,7 @@ export class TurnRepository extends Repository<Turn> {
       (
         SELECT
           *,
-          ST_Length(turn.srid) as route_legnth
+          ST_Length(turn.srid) AS route_legnth
         FROM 
           public.turn
         JOIN
@@ -89,26 +91,26 @@ export class TurnRepository extends Repository<Turn> {
             *
           FROM
             pgr_dijkstra(
-              'select id, fromnode::int as source, tonode::int as target, length as cost from public.turn',
+              'SELECT id, fromnode::int AS source, tonode::int AS target, length AS cost FROM public.turn',
               ${Number(searchRoutePlansDto.startNode)},
               ${Number(searchRoutePlansDto.endNode)}
             )
           ) AS route
           ON 
             turn.fromnode = route.node
-            order by seq
+            ORDER BY seq
         )
 
         SELECT 
           *,
-          ST_AsText(route_plan.geom) as l_str
+          ST_AsText(route_plan.geom) AS l_str
         FROM route_plan
-        where route_legnth in
+        WHERE route_legnth IN
         (
-          select 
+          SELECT 
             MIN(route_legnth)
-          from route_plan
-          group by fromnode
+          FROM route_plan
+          GROUP BY fromnode
         )
     `;
   }
@@ -125,7 +127,7 @@ export class TurnRepository extends Repository<Turn> {
       (
         SELECT
           *,
-          ST_Length(turn.srid) as route_legnth
+          ST_Length(turn.srid, true) AS route_legnth
         FROM 
           public.turn
         JOIN
@@ -134,25 +136,25 @@ export class TurnRepository extends Repository<Turn> {
             *
           FROM
             pgr_dijkstra(
-              'select id, fromnode::int as source, tonode::int as target, length as cost from public.turn',
+              'SELECT id, fromnode::int AS source, tonode::int AS target, length AS cost FROM public.turn',
               ${Number(searchRoutePlansDto.startNode)},
               ${Number(searchRoutePlansDto.endNode)}
             )
           ) AS route
           ON 
             turn.fromnode = route.node
-            order by seq
+            ORDER BY seq
         )
 
         SELECT 
-          ST_MakeLine(route_plan.srid) as l_str
+          ST_MakeLine(route_plan.srid) AS l_str
         FROM route_plan
-        where route_legnth in
+        WHERE route_legnth IN
         (
-          select 
+          SELECT 
             MIN(route_legnth)
-          from route_plan
-          group by fromnode
+          FROM route_plan
+          GROUP By fromnode
         )
     `;
   }

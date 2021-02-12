@@ -18,12 +18,13 @@ SELECT
         -- Get geometry point data from location
         SELECT
           point
-        from
+        FROM
           location
-        where
+        WHERE
           id = '000c520a-bedc-4801-86d1-55903010743e'
       ),
-      geometries
+      geometries,
+      true
     )
   ),
   *
@@ -36,12 +37,13 @@ ORDER BY
     (
       SELECT
         point
-      from
+      FROM
         location
-      where
+      WHERE
         id = '000c520a-bedc-4801-86d1-55903010743e'
     ),
-    geometries
+    geometries,
+    true
   )
 LIMIT
   1;

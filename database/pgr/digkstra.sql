@@ -2,32 +2,32 @@ WITH route_plan AS
 (
 	SELECT
 		*,
-		ST_Length(turn.srid) as route_legnth
+		ST_Length(turn.srid, true) AS route_legnth
 	FROM 
-		public.turn
+		turn
 	JOIN
 	(
 		SELECT
 			*
 		FROM
 			pgr_dijkstra(
-				'select id, fromnode::int as source, tonode::int as target, length as cost from public.turn',
+				'SELECT id, fromnode::int AS source, tonode::int AS target, length AS cost FROM turn',
 				2945,
 				26349
 			)
 	) AS route
 	ON 
 		turn.fromnode = route.node
-    order by seq
+    ORDER BY seq
 )
 
 SELECT 
-	ST_MakeLine(route_plan.srid) as geom
+	ST_MakeLine(route_plan.srid) AS geom
 FROM route_plan
-where route_legnth in
+WHERE route_legnth IN
 (
-	select 
+	SELECT 
 		MIN(route_legnth)
-	from route_plan
-	group by fromnode
+	FROM route_plan
+	GROUP BY fromnode
 )
