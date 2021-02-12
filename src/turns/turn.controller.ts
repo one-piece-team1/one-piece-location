@@ -1,19 +1,32 @@
-import { Body, Controller, Get, Query, UsePipes, ValidationPipe } from '@nestjs/common';
-import { CreateTurnDto, SearchForPlanStartandEndPointDto, SearchRoutePlansDto } from './dto';
+import { Controller, Get, Query, SetMetadata, UseGuards, ValidationPipe } from '@nestjs/common';
+import { SearchForPlanStartandEndPointDto, SearchRoutePlansDto } from './dto';
+import { AuthGuard } from '@nestjs/passport';
+import { RoleGuard } from '../guards/local-guard';
 import { TurnService } from './turn.service';
-import * as ITurn from './interfaces';
+import * as EUser from '../users/enums';
 
 @Controller('turns')
 export class TurnController {
   constructor(private readonly turnService: TurnService) {}
 
   @Get('/nodes')
-  getRouteStartandEndNodes(@Query(ValidationPipe) searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto) {
+  @SetMetadata('roles', [EUser.EUserRole.ADMIN])
+  @UseGuards(AuthGuard(['jwt']), RoleGuard)
+  getADMINRouteStartandEndNodes(@Query(ValidationPipe) searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto) {
     return this.turnService.getRouteStartandEndNodes(searchForPlanStartandEndPointDto);
   }
 
   @Get('/plans')
-  getRoutesPlanning(@Query(ValidationPipe) searchRoutePlansDto: SearchRoutePlansDto) {
+  @SetMetadata('roles', [EUser.EUserRole.ADMIN])
+  @UseGuards(AuthGuard(['jwt']), RoleGuard)
+  getADMINRoutesPlanning(@Query(ValidationPipe) searchRoutePlansDto: SearchRoutePlansDto) {
     return this.turnService.getRoutesPlanning(searchRoutePlansDto);
+  }
+
+  @Get('/plans/generates')
+  @SetMetadata('roles', [EUser.EUserRole.USER, EUser.EUserRole.VIP1, EUser.EUserRole.VIP2, EUser.EUserRole.ADMIN])
+  @UseGuards(AuthGuard(['jwt']), RoleGuard)
+  generateRoutesPlanning(@Query(ValidationPipe) searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto) {
+    return this.turnService.generateRoutesPlanning(searchForPlanStartandEndPointDto);
   }
 }

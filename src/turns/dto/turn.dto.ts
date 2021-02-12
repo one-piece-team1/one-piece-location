@@ -1,4 +1,4 @@
-import { IsArray, IsIn, IsNumberString, IsUUID } from 'class-validator';
+import { IsArray, IsIn, IsNumberString, IsOptional, IsUUID } from 'class-validator';
 import * as ELocation from '../enums';
 
 export class CreateTurnDto {
@@ -15,6 +15,9 @@ export class SearchForPlanStartandEndPointDto {
 
   @IsUUID()
   endId: string;
+
+  @IsOptional()
+  type?: ELocation.EPlanType;
 }
 
 export class SearchRoutePlansDto {

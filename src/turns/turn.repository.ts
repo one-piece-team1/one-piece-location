@@ -167,4 +167,15 @@ export class TurnRepository extends Repository<Turn> {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async generateRoutesPlanning(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<ITurn.INetworkGeometryResponse[]> {
+    try {
+      const nearestNodes = await this.getNearestPlanLineString(searchForPlanStartandEndPointDto);
+      if (!nearestNodes.startNode || !nearestNodes.endNode) throw new NotFoundException('Unable to find to start point or end point');
+      return await this.getRoutesPlanning({ startNode: nearestNodes.startNode.fromnode, endNode: nearestNodes.endNode.tonode, type: ETurn.EPlanType.LINE });
+    } catch (error) {
+      this.logger.log(error.message, 'GenerateRoutesPlanning');
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }

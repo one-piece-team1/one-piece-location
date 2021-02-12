@@ -32,4 +32,21 @@ export class TurnService {
     });
     return turns;
   }
+
+  public async generateRoutesPlanning(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<ITurn.INetworkGeometryResponse[]> {
+    const turns: ITurn.INetworkGeometryResponse[] = await this.turnRepository.generateRoutesPlanning(searchForPlanStartandEndPointDto);
+    if (!(turns instanceof Array))
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          message: 'Planning not found',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+
+    turns.forEach((turn: ITurn.INetworkGeometryResponse) => {
+      turn.lineString = utils.convertGeoTextToLineString(turn.l_str);
+    });
+    return turns;
+  }
 }
