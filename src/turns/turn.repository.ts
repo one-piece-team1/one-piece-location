@@ -139,18 +139,16 @@ export class TurnRepository extends Repository<Turn> {
     `;
   }
 
-  async getNearestPlanLineString(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto) {
+  async getNearestPlanLineString(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<ITurn.INearestNodeQueryResponse> {
     try {
-      const queries = [];
-      queries.push(this.repoManager.query(this.getNearestLineStringQuery(searchForPlanStartandEndPointDto.startId)));
-      queries.push(this.repoManager.query(this.getNearestLineStringQuery(searchForPlanStartandEndPointDto.endId)));
-      const nodes: ITurn.INodeGeometryResponse[] = await Promise.all<ITurn.INodeGeometryResponse>(queries);
-      if (!(nodes instanceof Array)) throw new NotFoundException('Target plan nodes not fond');
-      if (!nodes[0][0] || !nodes[1][0]) throw new NotFoundException('Target plan nodes not fond');
-      return {
-        startNode: nodes[0][0],
-        endNode: nodes[1][0],
-      };
+      const nearestLineStringResult: ITurn.INearestNodeQueryResponse = {};
+      const startNodes = await this.repoManager.query(this.getNearestLineStringQuery(searchForPlanStartandEndPointDto.startId));
+      const endNodes = await this.repoManager.query(this.getNearestLineStringQuery(searchForPlanStartandEndPointDto.endId));
+      if (!(startNodes instanceof Array) || !(endNodes instanceof Array)) throw new NotFoundException('Target plan nodes not fond');
+      if (startNodes.length < 1 || endNodes.length < 1) throw new NotFoundException('Target plan nodes not fond');
+      nearestLineStringResult.startNode = startNodes[0];
+      nearestLineStringResult.endNode = endNodes[0];
+      return nearestLineStringResult;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }

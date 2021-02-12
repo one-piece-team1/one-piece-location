@@ -35,6 +35,11 @@ export interface INodeGeometryResponse {
   geometries: string;
 }
 
+export interface INearestNodeQueryResponse {
+  startNode?: INodeGeometryResponse;
+  endNode?: INodeGeometryResponse;
+}
+
 export interface INetworkGeometryRequest {
   startNode: number;
   endNode: number;
