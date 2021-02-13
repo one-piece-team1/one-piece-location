@@ -71,7 +71,7 @@ export class TurnService {
     return {
       statusCode: HttpStatus.OK,
       status: 'success',
-      message: turns[0],
+      message: turns,
     };
   }
 }

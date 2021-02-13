@@ -13,10 +13,11 @@ export class TurnRepository extends Repository<Turn> {
   /**
    * @description Get nearest linestring query func
    * @private
-   * @param {string} locationId
+   * @param {string} locationName
    * @returns {string}
    */
-  private getNearestLineStringQuery(locationId: string): string {
+  private getNearestLineStringQuery(locationName: string): string {
+    locationName = locationName.replace("'", "''");
     return `
       -- get turn result for each linestring
       WITH turn_result AS (
@@ -41,7 +42,7 @@ export class TurnRepository extends Repository<Turn> {
               FROM
                 location
               WHERE
-                id = '${locationId}'
+                location."locationName" = '${locationName}'
             ),
             geometries,
             true
@@ -60,7 +61,7 @@ export class TurnRepository extends Repository<Turn> {
             FROM
               location
             WHERE
-              id = '${locationId}'
+              location."locationName" = '${locationName}'
           ),
           geometries,
           true
@@ -169,8 +170,8 @@ export class TurnRepository extends Repository<Turn> {
   public async getNearestPlanLineString(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<ITurn.INearestNodeQueryResponse> {
     try {
       const nearestLineStringResult: ITurn.INearestNodeQueryResponse = {};
-      const startNodes = await this.repoManager.query(this.getNearestLineStringQuery(searchForPlanStartandEndPointDto.startId));
-      const endNodes = await this.repoManager.query(this.getNearestLineStringQuery(searchForPlanStartandEndPointDto.endId));
+      const startNodes = await this.repoManager.query(this.getNearestLineStringQuery(searchForPlanStartandEndPointDto.startLocationName));
+      const endNodes = await this.repoManager.query(this.getNearestLineStringQuery(searchForPlanStartandEndPointDto.endLocationName));
       if (!(startNodes instanceof Array) || !(endNodes instanceof Array)) throw new NotFoundException('Target plan nodes not fond');
       if (startNodes.length < 1 || endNodes.length < 1) throw new NotFoundException('Target plan nodes not fond');
       nearestLineStringResult.startNode = startNodes[0];
@@ -210,7 +211,7 @@ export class TurnRepository extends Repository<Turn> {
     try {
       const nearestNodes = await this.getNearestPlanLineString(searchForPlanStartandEndPointDto);
       if (!nearestNodes.startNode || !nearestNodes.endNode) throw new NotFoundException('Unable to find to start point or end point');
-      return await this.getRoutesPlanning({ startNode: nearestNodes.startNode.fromnode, endNode: nearestNodes.endNode.tonode, type: ETurn.EPlanType.LINE });
+      return await this.getRoutesPlanning({ startNode: nearestNodes.startNode.fromnode, endNode: nearestNodes.endNode.tonode, type: searchForPlanStartandEndPointDto.type });
     } catch (error) {
       this.logger.log(error.message, 'GenerateRoutesPlanning');
       throw new InternalServerErrorException(error.message);
