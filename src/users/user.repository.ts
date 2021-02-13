@@ -2,7 +2,7 @@ import { InternalServerErrorException, Logger, NotFoundException } from '@nestjs
 import { Repository, EntityRepository, getManager, EntityManager, Not } from 'typeorm';
 import { User } from './user.entity';
 import * as IUser from './interfaces';
-import { DeleteUserEventDto, UpdatePasswordEventDto, UpdateUserAdditionalInfoPublishDto } from './dto';
+import { DeleteUserEventDto, UpdatePasswordEventDto } from './dto';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {

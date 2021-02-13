@@ -1,10 +1,9 @@
 import { ConflictException, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { EntityManager, EntityRepository, getManager, Like, Repository } from 'typeorm';
+import { EntityManager, EntityRepository, getManager, Repository } from 'typeorm';
 import { CoordQueryDto, CreateLocationDto, GetLocationById } from './dto';
 import { Country, Location } from './relations';
 import { IFindByIdQuery, ICoordQuerySpecifc, ICoordQueryRange } from './interfaces';
-import { IQueryPaging, ISearch } from '../interfaces';
-import { config } from '../../config';
+import { ISearch } from '../interfaces';
 import { ELocationType } from './enums';
 
 @EntityRepository(Location)
@@ -97,7 +96,8 @@ export class LocationRepository extends Repository<Location> {
     const take: number = searchReq.take ? Number(searchReq.take) : 10;
     const skip: number = searchReq.skip ? Number(searchReq.skip) : 0;
     // currently only allow to search, will open other type search in the future
-    const type: ELocationType.PORT = 'port' as ELocationType.PORT;
+
+    // const type: ELocationType.PORT = 'port' as ELocationType.PORT;
 
     let searchQuery = `
       select

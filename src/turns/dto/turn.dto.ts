@@ -1,4 +1,4 @@
-import { IsArray, IsIn, IsNumberString, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsArray, IsIn, IsNumberString, IsOptional, IsString } from 'class-validator';
 import * as ELocation from '../enums';
 
 export class CreateTurnDto {

@@ -1,6 +1,6 @@
-import { ConflictException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateTurnDto, SearchForPlanStartandEndPointDto, SearchRoutePlansDto } from './dto';
+import { SearchForPlanStartandEndPointDto, SearchRoutePlansDto } from './dto';
 import { TurnRepository } from './turn.repository';
 import * as utils from '../libs/utils';
 import * as ITurn from './interfaces';
