@@ -1,4 +1,4 @@
-import { Entity, BaseEntity, Column, Unique, Index, BeforeInsert, BeforeUpdate, CreateDateColumn, UpdateDateColumn, OneToMany, JoinColumn, ManyToMany, AfterLoad, PrimaryColumn } from 'typeorm';
+import { Entity, BaseEntity, Column, Unique, Index, BeforeInsert, BeforeUpdate, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as EUser from './enums';
 

@@ -1,5 +1,5 @@
 import { BaseEntity, BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { Point, LineString } from 'geojson';
+import { LineString } from 'geojson';
 
 @Entity()
 export class Turn extends BaseEntity {

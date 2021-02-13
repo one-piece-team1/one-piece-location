@@ -2,7 +2,7 @@ import { join } from 'path';
 import { DBFFile } from 'dbffile';
 import { createConnection, getManager } from 'typeorm';
 import { Logger } from '@nestjs/common';
-import { Point, LineString } from 'geojson';
+import { LineString } from 'geojson';
 import { config } from '../../config';
 import * as ELocation from '../locations/enums';
 import * as RoutesData from '../../datasets/routes/routes.json';
