@@ -20,7 +20,7 @@ import { UserRepository } from '../users/user.repository';
       secret: config.JWT.SECRET,
       signOptions: {
         algorithm: 'HS256',
-        expiresIn: '7d',
+        expiresIn: '1h',
         issuer: 'one-piece',
       },
       verifyOptions: {
