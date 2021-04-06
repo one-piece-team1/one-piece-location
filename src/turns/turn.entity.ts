@@ -1,4 +1,4 @@
-import { BaseEntity, BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { BaseEntity, BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn, VersionColumn } from 'typeorm';
 import { LineString } from 'geojson';
 
 @Entity()
@@ -37,6 +37,12 @@ export class Turn extends BaseEntity {
 
   @Column({ type: 'float', nullable: true })
   tonode?: number;
+
+  /**
+   * @description version control
+   */
+  @VersionColumn({ nullable: true })
+  version: number;
 
   /**
    * @description Time area

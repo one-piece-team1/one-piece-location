@@ -1,4 +1,4 @@
-import { BaseEntity, BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
+import { BaseEntity, BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn, VersionColumn } from 'typeorm';
 import { Point } from 'geojson';
 import * as ELocation from '../enums';
 import { Country } from './country.entity';
@@ -50,6 +50,12 @@ export class Location extends BaseEntity {
   @ManyToOne(() => Country, { cascade: true, nullable: true })
   @JoinColumn()
   country?: Country;
+
+  /**
+   * @description version control
+   */
+  @VersionColumn({ nullable: true })
+  version: number;
 
   /**
    * @description Time area
