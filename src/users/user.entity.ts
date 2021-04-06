@@ -1,4 +1,4 @@
-import { Entity, BaseEntity, Column, Unique, Index, BeforeInsert, BeforeUpdate, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
+import { Entity, BaseEntity, Column, Unique, Index, BeforeInsert, BeforeUpdate, CreateDateColumn, UpdateDateColumn, PrimaryColumn, VersionColumn } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as EUser from './enums';
 
@@ -59,6 +59,12 @@ export class User extends BaseEntity {
    */
   @Column({ type: 'boolean', default: true })
   status: boolean;
+
+  /**
+   * @description version control
+   */
+  @VersionColumn({ nullable: true })
+  version: number;
 
   /**
    * @description Time area
