@@ -21,7 +21,7 @@ import { LocationEventSubscribers } from '../subscribers/location.subscribe';
       secret: config.JWT.SECRET,
       signOptions: {
         algorithm: 'HS256',
-        expiresIn: '7d',
+        expiresIn: '1h',
         issuer: 'one-piece',
       },
       verifyOptions: {
