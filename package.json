@@ -40,7 +40,10 @@
     "test:watch": "jest --watch --forceExit",
     "test:cov": "jest --coverage --forceExit",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "ci:process": "circleci config process .circleci/config.yml > process.yml",
+    "ci:build": "circleci local execute -c process.yml --job build",
+    "ci:test": "circleci local execute -c process.yml --job test"
   },
   "dependencies": {
     "@nestjs/common": "^7.0.0",
