@@ -1,8 +1,8 @@
 import { Controller, Get, Param, Query, UseGuards, ValidationPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ISearch } from 'interfaces';
-import { CurrentUser } from 'strategy/get-user.decorator';
-import { JwtPayload } from 'strategy/interfaces';
+import { ISearch } from '../interfaces';
+import { CurrentUser } from '../strategy/get-user.decorator';
+import { JwtPayload } from '../strategy/interfaces';
 import { CoordQueryDto, GetLocationById } from './dto';
 import { ResponseBase } from './interfaces';
 import { LocationService } from './location.service';

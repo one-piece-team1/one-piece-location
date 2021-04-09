@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotAcceptableException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ISearch } from '../interfaces';
-import { JwtPayload } from 'strategy/interfaces';
+import { JwtPayload } from '../strategy/interfaces';
 import { CoordQueryDto, GetLocationById } from './dto';
 import { ICoordQueryRange, ICoordQuerySpecifc, ResponseBase } from './interfaces';
 import { ELicence } from './enums';

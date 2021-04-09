@@ -6,7 +6,7 @@ import { LocationController } from './location.controller';
 import { LocationRepository } from './location.repository';
 import { LocationService } from './location.service';
 import { config } from '../../config';
-import { JwtStrategy } from 'strategy';
+import { JwtStrategy } from '../strategy';
 import { UserRepository } from '../users/user.repository';
 import { LocationEventSubscribers } from '../subscribers/location.subscribe';
 

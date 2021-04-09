@@ -10,6 +10,11 @@ import * as EUser from '../users/enums';
 export class TurnController {
   constructor(private readonly turnService: TurnService) {}
 
+  @Get('/')
+  check(): string {
+    return 'turns routes is healthly';
+  }
+
   @Get('/nodes')
   @SetMetadata('roles', [EUser.EUserRole.ADMIN])
   @UseGuards(AuthGuard(['jwt']), RoleGuard)
