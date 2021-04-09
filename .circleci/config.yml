@@ -21,14 +21,42 @@ jobs:
 
   test:
     docker:
+      - image: kartoza/postgis:13.0
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 123
+          POSTGRES_DB: onepiece-test
+      - image: redis:alpine
+      - image: "rabbitmq:3-management"
+        environment:
+          RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+          RABBITMQ_DEFAULT_USER: "rabbitmq"
+          RABBITMQ_DEFAULT_PASS: "rabbitmq"
+          RABBITMQ_DEFAULT_VHOST: "/"
       - image: cimg/node:current
+        environment:
+          REDIS_URL: tcp://localhost:6379
     steps:
       - attach_workspace:
           at: .
       - run:
+          name: install dockerize
+          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+          environment:
+            DOCKERIZE_VERSION: v0.3.0
+      - run:
+          name: Wait for db
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      - run:
+          name: Wait for redis
+          command: dockerize -wait tcp://localhost:6379 -timeout 1m
+      - run:
           # no test yet
-          name: Test
+          name: Build
           command: sudo npm run build
+      - run:
+          name: Test
+          command: sudo npm run test
 
 workflows:
   version: 2
