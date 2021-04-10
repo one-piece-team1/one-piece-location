@@ -40,6 +40,8 @@ jobs:
           RABBITMQ_DEFAULT_VHOST: "/"
     steps:
       - checkout
+      - *restore_dependencies
+      - *restore_build
       - run:
           name: Wait for service containers
           command: |
@@ -50,9 +52,6 @@ jobs:
               sleep 1
             done
             echo Failed waiting for secondary containers && exit 1
-      - run:
-          name: jest
-          command: sudo npm install jest ts-jest jest-mock-extended @types/jest -g
       - run:
           name: test
           command: npm run test
