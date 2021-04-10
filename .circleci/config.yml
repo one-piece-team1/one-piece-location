@@ -14,16 +14,6 @@ jobs:
           app-dir: ~/one-piece-location
           cache-path: node_modules
           override-ci-command: sudo npm i
-      - restore_cache:
-          keys:
-            # when lock file changes, use increasingly general patterns to restore cache
-            - node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
-            - node-v1-{{ .Branch }}-
-            - node-v1-
-      - save_cache:
-          paths:
-            - ~/usr/local/lib/node_modules  # location depends on npm version
-          key: node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
       - persist_to_workspace:
           root: .
           paths:
@@ -31,26 +21,38 @@ jobs:
 
   integration:
     docker:
-      - image: circleci/node:latest
+      - image: cimg/node:current
+        auth:
+          username: $dh_username
+          password: $dh_pass
         environment:
           DBPORT: 5432
           REDIS_URL: tcp://localhost:6379
           REDIS_BLACKLIST_URL: tcp://localhost:6379
       - image: kartoza/postgis:13.0
+        auth:
+          username: $dh_username
+          password: $dh_pass
         environment:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: 123
           POSTGRES_DB: onepiece-test
       - image: redis:alpine
+        auth:
+          username: $dh_username
+          password: $dh_pass
       - image: "rabbitmq:3-management"
+        auth:
+          username: $dh_username
+          password: $dh_pass
         environment:
           RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
           RABBITMQ_DEFAULT_USER: "rabbitmq"
           RABBITMQ_DEFAULT_PASS: "rabbitmq"
           RABBITMQ_DEFAULT_VHOST: "/"
     steps:
-      - checkout
-      - restore_cache
+      - attach_workspace:
+          at: .
       - run:
           name: Wait for service containers
           command: |
