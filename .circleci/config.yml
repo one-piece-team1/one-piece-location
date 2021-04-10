@@ -33,11 +33,6 @@ jobs:
           POSTGRES_DB: onepiece,onepiece-test
       - image: redis:alpine
       - image: "rabbitmq:3-management"
-        environment:
-          RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
-          RABBITMQ_DEFAULT_USER: "rabbitmq"
-          RABBITMQ_DEFAULT_PASS: "rabbitmq"
-          RABBITMQ_DEFAULT_VHOST: "/"
     steps:
       - attach_workspace:
           at: .
