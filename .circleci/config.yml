@@ -12,6 +12,7 @@ jobs:
       - node/install-npm 
       - node/install-packages:
           app-dir: ~/one-piece-location
+          cache-path: node_modules
           override-ci-command: sudo npm i
       - persist_to_workspace:
           root: .
@@ -39,13 +40,11 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: install dockerize
-          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
-          environment:
-            DOCKERIZE_VERSION: v0.6.1
+          name: build
+          command: npm run build
       - run:
           name: Test
-          command: sudo npm run test
+          command: npm run test
 
 workflows:
   version: 2
