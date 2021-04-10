@@ -21,27 +21,13 @@ jobs:
 
   test:
     docker:
-      - image: kartoza/postgis:13.0
-        environment:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: 123
-          POSTGRES_DB: onepiece-test
-      - image: redis:alpine
-      - image: "rabbitmq:3-management"
-        environment:
-          RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
-          RABBITMQ_DEFAULT_USER: "rabbitmq"
-          RABBITMQ_DEFAULT_PASS: "rabbitmq"
-          RABBITMQ_DEFAULT_VHOST: "/"
       - image: cimg/node:current
-        environment:
-          REDIS_URL: tcp://localhost:6379
     steps:
       - attach_workspace:
           at: .
       - run:
           name: build
-          command: npm run build
+          command: ls -la
       - run:
           name: Test
           command: npm run test
