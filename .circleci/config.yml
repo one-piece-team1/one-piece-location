@@ -22,29 +22,17 @@ jobs:
   integration:
     docker:
       - image: cimg/node:current
-        auth:
-          username: $dh_username
-          password: $dh_pass
         environment:
           DBPORT: 5432
           REDIS_URL: tcp://localhost:6379
           REDIS_BLACKLIST_URL: tcp://localhost:6379
       - image: kartoza/postgis:13.0
-        auth:
-          username: $dh_username
-          password: $dh_pass
         environment:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: 123
           POSTGRES_DB: onepiece-test
       - image: redis:alpine
-        auth:
-          username: $dh_username
-          password: $dh_pass
       - image: "rabbitmq:3-management"
-        auth:
-          username: $dh_username
-          password: $dh_pass
         environment:
           RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
           RABBITMQ_DEFAULT_USER: "rabbitmq"
