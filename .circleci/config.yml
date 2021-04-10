@@ -30,7 +30,7 @@ jobs:
         environment:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: 123
-          POSTGRES_DB: onepiece-test
+          POSTGRES_DB: onepiece,onepiece-test
       - image: redis:alpine
       - image: "rabbitmq:3-management"
         environment:
