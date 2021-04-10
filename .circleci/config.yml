@@ -19,15 +19,47 @@ jobs:
           paths:
             - .
 
+  integration:
+    docker:
+      - image: circleci/node:latest
+        environment:
+          DBPORT: 5432
+          REDIS_URL: tcp://localhost:6379
+          REDIS_BLACKLIST_URL: tcp://localhost:6379
+      - image: kartoza/postgis:13.0
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 123
+          POSTGRES_DB: onepiece-test
+      - image: redis:alpine
+      - image: "rabbitmq:3-management"
+        environment:
+          RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+          RABBITMQ_DEFAULT_USER: "rabbitmq"
+          RABBITMQ_DEFAULT_PASS: "rabbitmq"
+          RABBITMQ_DEFAULT_VHOST: "/"
+    steps:
+      - checkout
+      - run:
+          name: Wait for service containers
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 5432 && nc -z localhost 5672 && nc -z localhost 6379 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for secondary containers && exit 1
+      - run:
+          name: test
+          command: npm run test
+      
   test:
     docker:
       - image: cimg/node:current
     steps:
       - attach_workspace:
           at: .
-      - run:
-          name: build
-          command: ls -la
       - run:
           name: Test
           command: npm run test
@@ -37,6 +69,6 @@ workflows:
   build_and_test:
     jobs:
       - build
-      - test:
+      - integration:
           requires:
             - build
