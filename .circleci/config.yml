@@ -14,6 +14,16 @@ jobs:
           app-dir: ~/one-piece-location
           cache-path: node_modules
           override-ci-command: sudo npm i
+      - restore_cache:
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - node-v1-{{ .Branch }}-
+            - node-v1-
+      - save_cache:
+          paths:
+            - ~/usr/local/lib/node_modules  # location depends on npm version
+          key: node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
       - persist_to_workspace:
           root: .
           paths:
@@ -40,8 +50,7 @@ jobs:
           RABBITMQ_DEFAULT_VHOST: "/"
     steps:
       - checkout
-      - *restore_dependencies
-      - *restore_build
+      - restore_cache
       - run:
           name: Wait for service containers
           command: |
