@@ -52,7 +52,7 @@ jobs:
             echo Failed waiting for secondary containers && exit 1
       - run:
           name: jest
-          command: npm install jest ts-jest jest-mock-extended @types/jest -g
+          command: sudo npm install jest ts-jest jest-mock-extended @types/jest -g
       - run:
           name: test
           command: npm run test
