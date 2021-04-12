@@ -121,7 +121,8 @@
     "clearMocks": true,
     "coveragePathIgnorePatterns": [
       "/node_modules/",
-      "src/audits"
+      "src/audits",
+      "src/libs"
     ],
     "moduleFileExtensions": [
       "js",
