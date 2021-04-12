@@ -49,7 +49,7 @@ describe('# User Repository', () => {
       } catch (error) {
         expect(error).not.toEqual(undefined);
         expect(typeof error.message).toEqual('string');
-        expect(error.message).toMatch(/column "id" violates not-null/gi);
+        expect(error.message).toMatch(/(id|not-null)/gi);
       }
       done();
     });
