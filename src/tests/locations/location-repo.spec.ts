@@ -280,8 +280,8 @@ describe('# Location Repository', () => {
       try {
         await locationRepository.getLocationByCoords(qDto);
       } catch (error) {
+        console.log(error.message);
         expect(error).not.toEqual(undefined);
-        expect(typeof error.message).toMatch(/(string|object)/gi);
       }
       done();
     });

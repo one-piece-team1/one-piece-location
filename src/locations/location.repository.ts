@@ -220,10 +220,7 @@ export class LocationRepository extends Repository<Location> {
       getRepository(Location, this.connectionName)
         .query(queryContent)
         .then((res) => resolve(res))
-        .catch((err) => {
-          this.logger.error(err.message, '', 'GetLocationByCoordsError');
-          return reject(err);
-        });
+        .catch((err) => reject(err));
     });
   }
 }
