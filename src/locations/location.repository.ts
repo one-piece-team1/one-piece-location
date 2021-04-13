@@ -222,7 +222,7 @@ export class LocationRepository extends Repository<Location> {
         .then((res) => resolve(res))
         .catch((err) => {
           this.logger.error(err.message, '', 'GetLocationByCoordsError');
-          return reject(err.message);
+          return reject(new Error(err.message));
         });
     });
   }
