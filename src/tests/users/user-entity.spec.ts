@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { Repository, createConnection, getRepository, Connection } from 'typeorm';
 import { User } from '../../users/user.entity';
+import { testOrmconfig } from '../../config/orm.config';
 
 describe('# User Entitiy', () => {
   let connection: Connection;
@@ -20,19 +21,7 @@ describe('# User Entitiy', () => {
       ],
     }).compile();
 
-    connection = await createConnection({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '123',
-      database: 'onepiece-test',
-      entities: [User],
-      synchronize: true,
-      dropSchema: true,
-      logging: false,
-      name: 'testConnection',
-    });
+    connection = await createConnection(testOrmconfig([User]));
     repository = getRepository(User, 'testConnection');
   });
 

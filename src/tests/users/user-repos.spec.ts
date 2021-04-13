@@ -4,6 +4,7 @@ import { Connection, createConnection } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../../users/user.entity';
 import { UserRepository } from '../../users/user.repository';
+import { testOrmconfig } from '../../config/orm.config';
 
 describe('# User Repository', () => {
   let connection: Connection;
@@ -19,19 +20,7 @@ describe('# User Repository', () => {
         },
       ],
     }).compile();
-    connection = await createConnection({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '123',
-      database: 'onepiece-test',
-      entities: [User],
-      synchronize: true,
-      dropSchema: true,
-      logging: false,
-      name: 'testConnection',
-    });
+    connection = await createConnection(testOrmconfig([User]));
     User.useConnection(connection);
     userRepository = await module.get(getCustomRepositoryToken(UserRepository));
   });

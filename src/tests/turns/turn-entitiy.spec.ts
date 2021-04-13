@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Connection, createConnection, getRepository, Repository } from 'typeorm';
 import { Turn } from '../../turns/turn.entity';
+import { testOrmconfig } from '../../config/orm.config';
 
 describe('# Turn Entity', () => {
   let connection: Connection;
@@ -18,19 +19,7 @@ describe('# Turn Entity', () => {
       ],
     }).compile();
 
-    connection = await createConnection({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '123',
-      database: 'onepiece-test',
-      entities: [Turn],
-      synchronize: true,
-      dropSchema: true,
-      logging: false,
-      name: 'testConnection',
-    });
+    connection = await createConnection(testOrmconfig([Turn]));
     repository = getRepository(Turn, 'testConnection');
   });
 

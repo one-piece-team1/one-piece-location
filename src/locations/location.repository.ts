@@ -1,38 +1,44 @@
 import { ConflictException, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { EntityManager, EntityRepository, getManager, Repository } from 'typeorm';
-import { CoordQueryDto, CreateLocationDto, GetLocationById } from './dto';
+import { EntityManager, EntityRepository, getManager, getRepository, Repository } from 'typeorm';
 import { Country, Location } from './relations';
+import { CoordQueryDto, CreateLocationDto, GetLocationById } from './dto';
 import { IFindByIdQuery, ICoordQuerySpecifc, ICoordQueryRange } from './interfaces';
 import { ISearch } from '../interfaces';
 import { ELocationType } from './enums';
+import { config } from '../../config';
 
 @EntityRepository(Location)
 export class LocationRepository extends Repository<Location> {
-  private readonly repoManager: EntityManager = getManager();
+  // jest default NODE_ENV is test
+  private readonly connectionName: string = config.ENV === 'test' ? 'testConnection' : 'default';
   private readonly logger: Logger = new Logger('LocationRepository');
 
   /**
-   *
-   * @param createLocationDto
+   * @description Create Country
+   * @public
+   * @param {string} countryName
+   * @param {string} countryCode
+   * @returns {Promise<Country>}
    */
-  protected async createCountry(countryName: string, countryCode: string): Promise<Country> {
+  public async createCountry(countryName: string, countryCode: string): Promise<Country> {
     const country = new Country();
     country.name = countryName;
     country.code = countryCode;
     try {
       return await country.save();
     } catch (error) {
+      this.logger.error(error.message, '', 'CreateCountryError');
       throw new InternalServerErrorException(error.message);
     }
   }
 
   /**
    * @description Create location but not open yet
-   * @protected
+   * @public
    * @param {CreateLocationDto} createLocationDto
    * @returns {Promise<Location>}
    */
-  protected async createLocation(createLocationDto: CreateLocationDto): Promise<Location> {
+  public async createLocation(createLocationDto: CreateLocationDto): Promise<Location> {
     const { locationName, lat, lon, type, countryName, countryCode } = createLocationDto;
     const location = new Location();
     location.locationName = locationName;
@@ -51,12 +57,8 @@ export class LocationRepository extends Repository<Location> {
     try {
       await location.save();
     } catch (error) {
-      if (error.code === '23505') {
-        // throw 409 error when duplicate LocationName
-        throw new ConflictException(`LocationName: ${locationName} already exists`);
-      } else {
-        throw new InternalServerErrorException();
-      }
+      this.logger.error(error.message, '', 'CreateLocationError');
+      throw new InternalServerErrorException(error.message);
     }
     return location;
   }
@@ -78,11 +80,12 @@ export class LocationRepository extends Repository<Location> {
       },
     };
     try {
-      const location: Location = await this.findOne(findOpts);
-      if (!location) throw new NotFoundException();
+      const location: Location = await getRepository(Location, this.connectionName).findOne(findOpts);
+      if (!location) throw new NotFoundException(`Location ${getLocationById.id} not found`);
       return location;
     } catch (error) {
-      throw new InternalServerErrorException();
+      this.logger.error(error.message, '', 'GetLocationByIdError');
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -116,11 +119,11 @@ export class LocationRepository extends Repository<Location> {
         location.type = 'port'
     `;
 
-    if (searchReq.locationName.length > 0) {
+    if (searchReq.locationName && searchReq.locationName.length > 0) {
       searchQuery += `and location."locationName" like '%${searchReq.locationName}%'`;
     }
 
-    if (searchReq.countryName.length > 0) {
+    if (searchReq.countryName && searchReq.countryName.length > 0) {
       searchQuery += `and pc."name" like '%${searchReq.countryName}%'`;
     }
 
@@ -131,7 +134,7 @@ export class LocationRepository extends Repository<Location> {
     `;
 
     try {
-      const result: Location[] = await this.repoManager.query(searchQuery);
+      const result: Location[] = await getRepository(Location, this.connectionName).query(searchQuery);
 
       return {
         locations: result,
@@ -140,8 +143,8 @@ export class LocationRepository extends Repository<Location> {
         count: Number(result[0] ? result[0]['cnt'] : '0'),
       };
     } catch (error) {
-      this.logger.log(error.message);
-      throw new InternalServerErrorException();
+      this.logger.error(error.message, '', 'GetLocationsWithNameSearchError');
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -153,6 +156,8 @@ export class LocationRepository extends Repository<Location> {
    */
   public async getLocationByCoords(coordQueryDto: CoordQueryDto): Promise<ICoordQuerySpecifc[] | ICoordQueryRange[]> {
     const { lat, lon, method } = coordQueryDto;
+    const take: number = coordQueryDto.take ? Number(coordQueryDto.take) : 10;
+    const skip: number = coordQueryDto.skip ? Number(coordQueryDto.skip) : 0;
     let queryContent = '';
 
     if (method === 'range') {
@@ -182,8 +187,8 @@ export class LocationRepository extends Repository<Location> {
           searchResult
         left join public.country pc on pc.id = searchResult."countryId"
         order by "kilodistance" ASC
-        limit ${coordQueryDto.take}
-        offset ${coordQueryDto.skip}
+        limit ${take}
+        offset ${skip}
       `;
     } else {
       queryContent = `
@@ -206,16 +211,18 @@ export class LocationRepository extends Repository<Location> {
           *
         from searchResult
         left join public.country pc on pc.id = searchResult."countryId"
+        limit ${take}
+        offset ${skip}
       `;
     }
 
     return new Promise<ICoordQuerySpecifc[] | ICoordQueryRange[]>((resolve, reject) => {
-      this.repoManager
+      getRepository(Location, this.connectionName)
         .query(queryContent)
         .then((res) => resolve(res))
         .catch((err) => {
-          this.logger.log(err.message);
-          reject(err.message);
+          this.logger.error(err.message, '', 'GetLocationByCoordsError');
+          return reject(new Error(err.message));
         });
     });
   }
