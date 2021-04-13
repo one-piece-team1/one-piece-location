@@ -216,13 +216,13 @@ export class LocationRepository extends Repository<Location> {
       `;
     }
 
-    return new Promise<ICoordQuerySpecifc[] | ICoordQueryRange[]>((resolve) => {
+    return new Promise<ICoordQuerySpecifc[] | ICoordQueryRange[]>((resolve, reject) => {
       getRepository(Location, this.connectionName)
         .query(queryContent)
         .then((res) => resolve(res))
         .catch((err) => {
-          this.logger.error(err.message, '', 'GetLocationByCoordsError');
-          throw new Error(err.message);
+          this.logger.error(err, '', 'GetLocationByCoordsError');
+          return reject(err);
         });
     });
   }
