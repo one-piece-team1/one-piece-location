@@ -158,7 +158,6 @@ describe('# Location Service', () => {
     it('Should return and resolve coords range or specific query', async (done: jest.DoneCallback) => {
       locationRepository.getLocationByCoords = jest.fn().mockReturnValue([mockCoordQuerySpecifc]);
       const response = await locationService.getLocationByCoords({ username: 'test', licence: 'onepiece' }, { lat: 111.09098, lon: 111.33223, method: ELocation.ELocationCoordQueryMethod.SPECIFIC });
-      console.log('response: ', response);
       expect(response.message['searchResult'] as ICoordQuerySpecifc[]).toEqual([mockCoordQuerySpecifc]);
       expect(response.message['take'] as number).toEqual(10);
       expect(response.message['skip'] as number).toEqual(0);
