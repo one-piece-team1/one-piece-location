@@ -268,7 +268,7 @@ describe('# Location Repository', () => {
       done();
     });
 
-    it('Should get rejection when take or skip is minus', async (done: jest.DoneCallback) => {
+    it.skip('Should get rejection when take or skip is minus', async (done: jest.DoneCallback) => {
       const qDto = {
         lat: 11.09,
         lon: 12.09,
