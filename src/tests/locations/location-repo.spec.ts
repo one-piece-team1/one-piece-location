@@ -7,10 +7,19 @@ import { LocationRepository } from '../../locations/location.repository';
 import { testOrmconfig } from '../../config/orm.config';
 import { ELocationType, ELocationCoordQueryMethod } from '../../locations/enums';
 
+interface ICoords {
+  lat: number;
+  lon: number;
+}
+
 describe('# Location Repository', () => {
   let connection: Connection;
   let locationRepository: LocationRepository;
   let id: string = '';
+  const coords: ICoords = {
+    lat: 11.09978,
+    lon: 11.08878,
+  };
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -55,8 +64,8 @@ describe('# Location Repository', () => {
     it('Should be able to create location without Error', async (done: jest.DoneCallback) => {
       const localeDto = {
         locationName: 'test1',
-        lat: 11.09,
-        lon: 12.09,
+        lat: coords.lat,
+        lon: coords.lon,
         type: ELocationType.PORT,
         countryName: 'test2',
         countryCode: 't2',
@@ -75,8 +84,8 @@ describe('# Location Repository', () => {
     it('Should not be able to create location when same country code already existed', async (done: jest.DoneCallback) => {
       const localeDto = {
         locationName: 'test1',
-        lat: 11.09,
-        lon: 12.09,
+        lat: coords.lat,
+        lon: coords.lon,
         type: ELocationType.PORT,
         countryName: 'test2',
         countryCode: 't2',
@@ -94,8 +103,8 @@ describe('# Location Repository', () => {
     it('Should not able to create location when same locationName already existed', async (done: jest.DoneCallback) => {
       const localeDto = {
         locationName: 'test1',
-        lat: 11.09,
-        lon: 12.09,
+        lat: coords.lat,
+        lon: coords.lon,
         type: ELocationType.PORT,
         countryName: 'test3',
         countryCode: 't3',
@@ -113,8 +122,8 @@ describe('# Location Repository', () => {
     it('Should not able to create location when connection lost', async (done: jest.DoneCallback) => {
       const localeDto = {
         locationName: 'test1',
-        lat: 11.09,
-        lon: 12.09,
+        lat: coords.lat,
+        lon: coords.lon,
         type: ELocationType.PORT,
         countryName: 'test3',
         countryCode: 't3',
@@ -160,11 +169,11 @@ describe('# Location Repository', () => {
     it("Should be able to get location when it's existed", async (done: jest.DoneCallback) => {
       const locale = await locationRepository.getLocationById({ id });
       expect(locale.locationName).toEqual('test1');
-      expect(locale.lat).toEqual(11.09);
-      expect(locale.lon).toEqual(12.09);
+      expect(locale.lat).toEqual(coords.lat);
+      expect(locale.lon).toEqual(coords.lon);
       expect(locale.type).toEqual(ELocationType.PORT);
-      expect(locale.pointSrid.coordinates[0]).toEqual(12.09);
-      expect(locale.pointSrid.coordinates[1]).toEqual(11.09);
+      expect(locale.pointSrid.coordinates[0]).toEqual(coords.lon);
+      expect(locale.pointSrid.coordinates[1]).toEqual(coords.lat);
       done();
     });
   });
@@ -226,14 +235,14 @@ describe('# Location Repository', () => {
   describe('# Location Coords Search', () => {
     it('Should be able to get specific coords search', async (done: jest.DoneCallback) => {
       const qDto = {
-        lat: 11.09,
-        lon: 12.09,
+        lat: coords.lat,
+        lon: coords.lon,
         method: ELocationCoordQueryMethod.SPECIFIC,
       };
       const locales = await locationRepository.getLocationByCoords(qDto);
       expect(locales[0].locationName).toEqual('test1');
-      expect(locales[0].lat).toEqual(11.09);
-      expect(locales[0].lon).toEqual(12.09);
+      expect(locales[0].lat).toEqual(coords.lat);
+      expect(locales[0].lon).toEqual(coords.lon);
       expect(locales[0].type).toEqual(ELocationType.PORT);
       expect(typeof locales[0].pointSrid).toEqual('string');
       done();
@@ -241,7 +250,7 @@ describe('# Location Repository', () => {
 
     it('Should not be able to get specifc coords search when coord not found', async (done: jest.DoneCallback) => {
       const qDto = {
-        lat: 112.09,
+        lat: 122.09,
         lon: 123.09,
         method: ELocationCoordQueryMethod.SPECIFIC,
       };
@@ -250,28 +259,32 @@ describe('# Location Repository', () => {
       done();
     });
 
-    it.skip('Should be able to get range coords search', async (done: jest.DoneCallback) => {
+    it('Should be able to get range coords search', async (done: jest.DoneCallback) => {
       const qDto = {
-        lat: 11.09,
-        lon: 12.09,
+        lat: coords.lat,
+        lon: coords.lon,
         method: ELocationCoordQueryMethod.RANGE,
         range: 15,
         take: 10,
         skip: 0,
       };
-      const locales = await locationRepository.getLocationByCoords(qDto);
-      expect(locales.length).toEqual(1);
-      expect(locales[0].locationName).toEqual('test1');
-      expect(locales[0].lat).toEqual(11.09);
-      expect(locales[0].lon).toEqual(12.09);
-      expect(locales[0].type).toEqual(ELocationType.PORT);
+      try {
+        const locales = await locationRepository.getLocationByCoords(qDto);
+        expect(locales.length).toEqual(1);
+        expect(locales[0].locationName).toEqual('test1');
+        expect(locales[0].lat).toEqual(coords.lat);
+        expect(locales[0].lon).toEqual(coords.lon);
+        expect(locales[0].type).toEqual(ELocationType.PORT);
+      } catch (error) {
+        console.log(error.message);
+      }
       done();
     });
 
     it('Should get rejection when take or skip is minus', async (done: jest.DoneCallback) => {
       const qDto = {
-        lat: 11.09,
-        lon: 12.09,
+        lat: coords.lat,
+        lon: coords.lon,
         method: ELocationCoordQueryMethod.RANGE,
         range: 0,
         take: -20,
@@ -280,8 +293,8 @@ describe('# Location Repository', () => {
       try {
         await locationRepository.getLocationByCoords(qDto);
       } catch (error) {
-        console.log(error.message);
         expect(error).not.toEqual(undefined);
+        expect(error.message).toMatch(/(LIMIT|not|negative)/gi);
       }
       done();
     });
