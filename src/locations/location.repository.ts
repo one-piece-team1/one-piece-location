@@ -221,7 +221,7 @@ export class LocationRepository extends Repository<Location> {
         .query(queryContent)
         .then((res) => resolve(res))
         .catch((err) => {
-          this.logger.error(err, '', 'GetLocationByCoordsError');
+          this.logger.error(err.message, '', 'GetLocationByCoordsError');
           return reject(err);
         });
     });
