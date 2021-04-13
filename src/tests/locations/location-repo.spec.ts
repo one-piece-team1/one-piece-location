@@ -282,7 +282,7 @@ describe('# Location Repository', () => {
       } catch (error) {
         expect(error).not.toEqual(undefined);
         expect(typeof error.message).toEqual('string');
-        expect(error.message).toMatch(/(LIMIT|negative)/gi);
+        expect(error.message).toMatch(/(LIMIT|negative|range)/gi);
       }
       done();
     });
