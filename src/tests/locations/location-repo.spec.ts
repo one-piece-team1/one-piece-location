@@ -250,7 +250,7 @@ describe('# Location Repository', () => {
       done();
     });
 
-    it('Should be able to get range coords search', async (done: jest.DoneCallback) => {
+    it.skip('Should be able to get range coords search', async (done: jest.DoneCallback) => {
       const qDto = {
         lat: 11.09,
         lon: 12.09,
@@ -268,7 +268,7 @@ describe('# Location Repository', () => {
       done();
     });
 
-    it.skip('Should get rejection when take or skip is minus', async (done: jest.DoneCallback) => {
+    it('Should get rejection when take or skip is minus', async (done: jest.DoneCallback) => {
       const qDto = {
         lat: 11.09,
         lon: 12.09,
