@@ -56,7 +56,7 @@ describe('# JWT Strategy', () => {
     it('Should be able to throw exception when exp is expired', async (done: jest.DoneCallback) => {
       mockPayload = {
         username: 'lib1',
-        exp: new Date('2000/01/01').getTime(),
+        exp: new Date('2000/01/01').getTime() / 1000,
       };
       try {
         await jwtStrategy.validate(mockRequest, mockPayload);

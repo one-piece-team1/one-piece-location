@@ -32,7 +32,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
    */
   async validate(req: Request, payload: JwtPayload): Promise<User | JwtPayload> {
     // check token expired time
-    if (Date.now() >= payload.exp) throw new UnauthorizedException('Token is expired');
+    if (Date.now() >= (payload.exp * 1000)) throw new UnauthorizedException('Token is expired');
 
     const { username } = payload;
 
