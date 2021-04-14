@@ -49,7 +49,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-
+    user['licence'] = payload.licence;
     return user;
   }
 }
