@@ -1,14 +1,16 @@
 import { InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { EntityManager, EntityRepository, getManager, Repository } from 'typeorm';
+import { EntityManager, EntityRepository, getManager, getRepository, Repository } from 'typeorm';
 import { Turn } from './turn.entity';
-import * as ITurn from './interfaces';
 import { SearchForPlanStartandEndPointDto, SearchRoutePlansDto } from './dto';
 import * as ETurn from './enums';
+import * as ITurn from './interfaces';
+import { config } from '../../config';
 
 @EntityRepository(Turn)
 export class TurnRepository extends Repository<Turn> {
+  // jest default NODE_ENV is test
+  private readonly connectionName: string = config.ENV === 'test' ? 'testConnection' : 'default';
   private readonly logger: Logger = new Logger('TurnRepository');
-  private readonly repoManager: EntityManager = getManager();
 
   /**
    * @description Get nearest linestring query func
@@ -16,6 +18,7 @@ export class TurnRepository extends Repository<Turn> {
    * @param {string} locationName
    * @returns {string}
    */
+  /* istanbul ignore next */
   private getNearestLineStringQuery(locationName: string): string {
     locationName = locationName.replace("'", "''");
     return `
@@ -77,6 +80,7 @@ export class TurnRepository extends Repository<Turn> {
    * @param {SearchRoutePlansDto} searchRoutePlansDto
    * @returns {string}
    */
+  /* istanbul ignore next */
   private getRoutePlanAsTextQuery(searchRoutePlansDto: SearchRoutePlansDto): string {
     return `
       WITH route_plan AS
@@ -122,6 +126,7 @@ export class TurnRepository extends Repository<Turn> {
    * @param {SearchRoutePlansDto} searchRoutePlansDto
    * @returns {string}
    */
+  /* istanbul ignore next */
   private getRoutePlanMakeLineQuery(searchRoutePlansDto: SearchRoutePlansDto): string {
     return `
       WITH route_plan AS
@@ -170,14 +175,16 @@ export class TurnRepository extends Repository<Turn> {
   public async getNearestPlanLineString(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<ITurn.INearestNodeQueryResponse> {
     try {
       const nearestLineStringResult: ITurn.INearestNodeQueryResponse = {};
-      const startNodes = await this.repoManager.query(this.getNearestLineStringQuery(searchForPlanStartandEndPointDto.startLocationName));
-      const endNodes = await this.repoManager.query(this.getNearestLineStringQuery(searchForPlanStartandEndPointDto.endLocationName));
-      if (!(startNodes instanceof Array) || !(endNodes instanceof Array)) throw new NotFoundException('Target plan nodes not fond');
-      if (startNodes.length < 1 || endNodes.length < 1) throw new NotFoundException('Target plan nodes not fond');
+      const startNodes = await getRepository(Turn, this.connectionName).query(this.getNearestLineStringQuery(searchForPlanStartandEndPointDto.startLocationName));
+      const endNodes = await getRepository(Turn, this.connectionName).query(this.getNearestLineStringQuery(searchForPlanStartandEndPointDto.endLocationName));
+      if (!(startNodes instanceof Array) || !(endNodes instanceof Array)) throw new NotFoundException('Target plan nodes not found');
+      if (startNodes.length < 1 || endNodes.length < 1) throw new NotFoundException('Target plan nodes not found');
       nearestLineStringResult.startNode = startNodes[0];
       nearestLineStringResult.endNode = endNodes[0];
+      if (!nearestLineStringResult.startNode.st_distance || !nearestLineStringResult.endNode.st_distance) throw new NotFoundException('Target plan nodes not found');
       return nearestLineStringResult;
     } catch (error) {
+      this.logger.error(error.message, '', 'GetNearestPlanLineStringError');
       throw new InternalServerErrorException(error.message);
     }
   }
@@ -189,14 +196,14 @@ export class TurnRepository extends Repository<Turn> {
    * @param {SearchRoutePlansDto} searchRoutePlansDto
    * @returns {Promise<ITurn.INetworkGeometryResponse[]>}
    */
-  async getRoutesPlanning(searchRoutePlansDto: SearchRoutePlansDto): Promise<ITurn.INetworkGeometryResponse[]> {
+  public async getRoutesPlanning(searchRoutePlansDto: SearchRoutePlansDto): Promise<ITurn.INetworkGeometryResponse[]> {
     try {
       if (searchRoutePlansDto.type === ETurn.EPlanType.TEXT) {
-        return await this.repoManager.query(this.getRoutePlanAsTextQuery(searchRoutePlansDto));
+        return await getRepository(Turn, this.connectionName).query(this.getRoutePlanAsTextQuery(searchRoutePlansDto));
       }
-      return await this.repoManager.query(this.getRoutePlanMakeLineQuery(searchRoutePlansDto));
+      return await getRepository(Turn, this.connectionName).query(this.getRoutePlanMakeLineQuery(searchRoutePlansDto));
     } catch (error) {
-      this.logger.log(error.message, 'GetRoutesPlanning');
+      this.logger.error(error.message, '', 'GetRoutesPlanningError');
       throw new InternalServerErrorException(error.message);
     }
   }
@@ -207,13 +214,13 @@ export class TurnRepository extends Repository<Turn> {
    * @param {SearchForPlanStartandEndPointDto} searchForPlanStartandEndPointDto
    * @returns {Promise<ITurn.INetworkGeometryResponse[]>}
    */
-  async generateRoutesPlanning(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<ITurn.INetworkGeometryResponse[]> {
+  public async generateRoutesPlanning(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<ITurn.INetworkGeometryResponse[]> {
     try {
       const nearestNodes = await this.getNearestPlanLineString(searchForPlanStartandEndPointDto);
       if (!nearestNodes.startNode || !nearestNodes.endNode) throw new NotFoundException('Unable to find to start point or end point');
       return await this.getRoutesPlanning({ startNode: nearestNodes.startNode.fromnode, endNode: nearestNodes.endNode.tonode, type: searchForPlanStartandEndPointDto.type });
     } catch (error) {
-      this.logger.log(error.message, 'GenerateRoutesPlanning');
+      this.logger.error(error.message, '', 'GenerateRoutesPlanningError');
       throw new InternalServerErrorException(error.message);
     }
   }
