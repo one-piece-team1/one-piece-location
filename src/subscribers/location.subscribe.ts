@@ -46,6 +46,7 @@ export class LocationEventSubscribers {
             queueName,
             {
               exclusive: true,
+              autoDelete: true,
             },
             (assertErr: Error, q: amqp.Replies.AssertQueue) => {
               if (assertErr) return reject(assertErr.message);
