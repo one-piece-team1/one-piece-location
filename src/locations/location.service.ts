@@ -1,130 +1,106 @@
-import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotAcceptableException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ISearch } from '../interfaces';
-import { JwtPayload } from 'strategy/interfaces';
-import { CoordQueryDto, GetLocationById } from './dto';
-import { ICoordQueryRange, ICoordQuerySpecifc, ResponseBase } from './interfaces';
-import { ELicence } from './enums';
-import { LocationRepository } from './location.repository';
 import { Location } from './relations';
+import { LocationRepository } from './location.repository';
+import { CoordQueryDto, GetLocationById } from './dto';
+import HTTPResponse from '../libs/response';
+import * as IShare from '../interfaces';
+import { ICoordQueryRange, ICoordQuerySpecifc } from './interfaces';
+import { ELicence } from './enums';
 
 @Injectable()
 export class LocationService {
+  private readonly httPResponse: HTTPResponse = new HTTPResponse();
   private readonly logger: Logger = new Logger('LocationService');
 
   constructor(@InjectRepository(LocationRepository) private locationRepository: LocationRepository) {}
 
-  public getRequest(): string {
-    return 'Hello World!';
-  }
-
   /**
    * @description Get location by id
    * @public
-   * @param {JwtPayload} user
+   * @param {IShare.JwtPayload} user
    * @param {GetLocationById} getLocationById
-   * @returns {Promise<ResponseBase>}
+   * @returns {Promise<IShare.IResponseBase<Location | string>>}
    */
-  public async getLocationById(user: JwtPayload, getLocationById: GetLocationById): Promise<ResponseBase> {
-    // if can not recognize user payload then throw unauthorized
-    if (!user) throw new UnauthorizedException();
+  public async getLocationById(user: IShare.JwtPayload, getLocationById: GetLocationById): Promise<IShare.IResponseBase<Location | string>> {
     // if can not recognize user payload licence then throw not acceptable
-    if (!Object.values(ELicence).includes(user.licence as ELicence)) throw new NotAcceptableException();
+    if (!Object.values(ELicence).includes(user.licence as ELicence)) {
+      this.logger.error('Not acceptable licence', '', 'GetLocationByIdError');
+      return this.httPResponse.NotAcceptableError('Not acceptable licence');
+    }
     try {
       const location: Location = await this.locationRepository.getLocationById(getLocationById);
-
-      if (!location)
-        return {
-          statusCode: 404,
-          status: 'error',
-          message: `Location ${getLocationById.id} not found`,
-        };
-      return {
-        statusCode: 200,
-        status: 'success',
-        message: location,
-      };
+      if (!location) {
+        this.logger.error(`Location ${getLocationById.id} not found`, '', 'GetLocationByIdError');
+        return this.httPResponse.NotFoundError(`Location ${getLocationById.id} not found`);
+      }
+      return this.httPResponse.StatusOK(location);
     } catch (error) {
-      this.logger.log(error.message, 'GetLocationById');
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      this.logger.error(error.message, '', 'GetLocationByIdError');
+      throw new InternalServerErrorException(error.message);
     }
   }
 
   /**
    * @description Get location with name search and supporting pagination query
    * @public
-   * @param {JwtPayload} user
-   * @param {ISearch} searchReq
-   * @returns {Promise<ResponseBase>}
+   * @param {IShare.JwtPayload} user
+   * @param {IShare.ISearch} searchReq
+   * @returns {Promise<IShare.IResponseBase<IShare.ILocationPagingResponseBase<Location[]> | string>>}
    */
-  public async getLocationsWithNameSearch(user: JwtPayload, searchReq: ISearch): Promise<ResponseBase> {
-    // if can not recognize user payload then throw unauthorized
-    if (!user) throw new UnauthorizedException();
+  public async getLocationsWithNameSearch(user: IShare.JwtPayload, searchReq: IShare.ISearch): Promise<IShare.IResponseBase<IShare.ILocationPagingResponseBase<Location[]> | string>> {
     // if can not recognize user payload licence then throw not acceptable
-    if (!Object.values(ELicence).includes(user.licence as ELicence)) throw new NotAcceptableException();
+    if (!Object.values(ELicence).includes(user.licence as ELicence)) {
+      this.logger.error('Not acceptable licence', '', 'GetLocationsWithNameSearchError');
+      return this.httPResponse.NotAcceptableError('Not acceptable licence');
+    }
     // handling optional query params
     if (!searchReq.locationName) searchReq.locationName = '';
     if (!searchReq.countryName) searchReq.countryName = '';
     if (!searchReq.sort) searchReq.sort = 'DESC';
     try {
       const { locations, count, take, skip } = await this.locationRepository.getLocationsWithNameSearch(searchReq);
-      return {
-        statusCode: 200,
-        status: 'success',
-        message: {
-          locations,
-          take,
-          skip,
-          count,
-        },
-      };
+      return this.httPResponse.StatusOK({
+        locations,
+        take,
+        skip,
+        count,
+      });
     } catch (error) {
-      this.logger.log(error.message, 'GetLocationsWithNameSearch');
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      this.logger.error(error.message, '', 'GetLocationsWithNameSearchError');
+      throw new InternalServerErrorException(error.message);
     }
   }
 
   /**
    * @description Search Location with geo data
    * @public
-   * @param {JwtPayload} user
+   * @param {IShare.JwtPayload} user
    * @param {CoordQueryDto} coordQueryDto
-   * @returns {Promise<ResponseBase>}
+   * @returns {Promise<IShare.IResponseBase<IShare.ILocationCoordResponseBase<ICoordQueryRange[] | ICoordQuerySpecifc[]> | string>>}
    */
-  public async getLocationByCoords(user: JwtPayload, coordQueryDto: CoordQueryDto): Promise<ResponseBase> {
-    // if can not recognize user payload then throw unauthorized
-    if (!user) throw new UnauthorizedException();
+  public async getLocationByCoords(user: IShare.JwtPayload, coordQueryDto: CoordQueryDto): Promise<IShare.IResponseBase<IShare.ILocationCoordResponseBase<ICoordQueryRange[] | ICoordQuerySpecifc[]> | string>> {
     // if can not recognize user payload licence then throw not acceptable
-    if (!Object.values(ELicence).includes(user.licence as ELicence)) throw new NotAcceptableException();
+    if (!Object.values(ELicence).includes(user.licence as ELicence)) {
+      this.logger.error('Not acceptable licence', '', 'GetLocationByCoordsError');
+      return this.httPResponse.NotAcceptableError('Not acceptable licence');
+    }
     coordQueryDto.take = coordQueryDto.take ? Number(coordQueryDto.take) : 10;
     coordQueryDto.skip = coordQueryDto.skip ? Number(coordQueryDto.skip) : 0;
     try {
       const searchResult: ICoordQueryRange[] | ICoordQuerySpecifc[] = await this.locationRepository.getLocationByCoords(coordQueryDto);
-      if (!searchResult) throw new NotFoundException();
-      return {
-        statusCode: 200,
-        status: 'success',
-        message: {
-          searchResult,
-          take: coordQueryDto.take,
-          skip: coordQueryDto.skip,
-          count: searchResult.length,
-        },
-      };
+      if (!searchResult) {
+        this.logger.error(`Location not found for lat ${coordQueryDto.lat} and lon ${coordQueryDto.lon}`, '', 'GetLocationByCoordsError');
+        return this.httPResponse.NotFoundError(`Location not found for lat ${coordQueryDto.lat} and lon ${coordQueryDto.lon}`);
+      }
+      return this.httPResponse.StatusOK({
+        searchResult,
+        take: coordQueryDto.take,
+        skip: coordQueryDto.skip,
+        count: searchResult.length,
+      });
     } catch (error) {
-      this.logger.log(error.message, 'GetLocationByCoords');
+      this.logger.error(error.message, '', 'GetLocationByCoordsError');
       throw new InternalServerErrorException(error.message);
     }
   }
