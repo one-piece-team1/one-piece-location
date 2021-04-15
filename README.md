@@ -1,6 +1,7 @@
 # README
 
 [![one-piece-location](https://circleci.com/gh/one-piece-team1/one-piece-location.svg?style=svg)](https://circleci.com/gh/one-piece-team1/one-piece-location.svg?style=svg)
+[![codecov](https://codecov.io/gh/one-piece-team1/one-piece-location/branch/master/graph/badge.svg?token=6SQ8NFTP4A)](https://codecov.io/gh/one-piece-team1/one-piece-location)
 ## LICENCE
 
 Copyright [2020]["11","ivonne", "mina", "evena"]

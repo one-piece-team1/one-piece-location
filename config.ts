@@ -89,6 +89,16 @@ const configs = {
       table: process.env.DBRATETABLE || 'location',
     },
 
+    TEST_DB_SETTINGS: {
+      host: process.env.DBHOST || 'localhost',
+      port: process.env.DBPORT || 5430,
+      username: process.env.DBUSERNAME || 'postgres',
+      password: process.env.DBPASSWORD || '123',
+      database: process.env.DBDATABASE || 'onepiece-test',
+      schema: process.env.DBSCHEMA || 'public',
+      table: process.env.DBRATETABLE || 'jest',
+    },
+
     REDIS_URL: process.env.REDIS_URL || "redis://127.0.0.1:6383",
     REDIS_BLACKLIST_URL: process.env.REDIS_BLACKLIST_URL || "redis://127.0.0.1:6379",
 
