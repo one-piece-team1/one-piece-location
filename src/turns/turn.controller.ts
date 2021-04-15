@@ -1,10 +1,11 @@
 import { Controller, Get, Query, SetMetadata, UseGuards, ValidationPipe } from '@nestjs/common';
-import { SearchForPlanStartandEndPointDto, SearchRoutePlansDto } from './dto';
 import { AuthGuard } from '@nestjs/passport';
 import { RoleGuard } from '../guards/local-guard';
 import { TurnService } from './turn.service';
-import * as ITurn from './interfaces';
+import { SearchForPlanStartandEndPointDto, SearchRoutePlansDto } from './dto';
 import * as EUser from '../users/enums';
+import * as IShare from '../interfaces';
+import * as ITurn from './interfaces';
 
 @Controller('turns')
 export class TurnController {
@@ -25,14 +26,14 @@ export class TurnController {
   @Get('/plans')
   @SetMetadata('roles', [EUser.EUserRole.ADMIN])
   @UseGuards(AuthGuard(['jwt']), RoleGuard)
-  getADMINRoutesPlanning(@Query(ValidationPipe) searchRoutePlansDto: SearchRoutePlansDto): Promise<ITurn.INetworkGeometryResponse[]> {
+  getADMINRoutesPlanning(@Query(ValidationPipe) searchRoutePlansDto: SearchRoutePlansDto): Promise<IShare.IResponseBase<ITurn.INetworkGeometryResponse[] | string>> {
     return this.turnService.getRoutesPlanning(searchRoutePlansDto);
   }
 
   @Get('/plans/generates')
   @SetMetadata('roles', [EUser.EUserRole.USER, EUser.EUserRole.VIP1, EUser.EUserRole.VIP2, EUser.EUserRole.ADMIN])
   @UseGuards(AuthGuard(['jwt']), RoleGuard)
-  generateRoutesPlanning(@Query(ValidationPipe) searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<ITurn.ResponseBase> {
+  generateRoutesPlanning(@Query(ValidationPipe) searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<IShare.IResponseBase<ITurn.INetworkGeometryResponse[] | string>> {
     return this.turnService.generateRoutesPlanning(searchForPlanStartandEndPointDto);
   }
 }

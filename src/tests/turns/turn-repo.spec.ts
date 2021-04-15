@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getCustomRepositoryToken } from '@nestjs/typeorm';
 import { Connection, createConnection, getManager } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
 import { Turn } from '../../turns/turn.entity';
 import { Location, Country } from '../../locations/relations';
 import { TurnRepository } from '../../turns/turn.repository';

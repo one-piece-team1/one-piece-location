@@ -27,8 +27,8 @@ describe('# Location Service', () => {
       ],
     }).compile();
 
-    locationService = await module.get<LocationService>(LocationService);
-    locationRepository = await module.get<LocationRepository>(LocationRepository);
+    locationService = module.get<LocationService>(LocationService);
+    locationRepository = module.get<LocationRepository>(LocationRepository);
 
     const country = new Country();
     country.id = uuidv4();
