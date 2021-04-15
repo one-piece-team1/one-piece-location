@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { v4 as uuidv4 } from 'uuid';
+import * as bcrypt from 'bcrypt';
 import { Repository, createConnection, getRepository, Connection } from 'typeorm';
 import { User } from '../../users/user.entity';
 import { testOrmconfig } from '../../config/orm.config';
@@ -32,8 +33,8 @@ describe('# User Entitiy', () => {
       user.id = id;
       user.username = 'unit-test1';
       user.email = 'unit-test1@gmail.com';
-      user.password = 'Aabc123';
-      user.salt = '123';
+      user.salt = await bcrypt.genSalt();
+      user.password = await bcrypt.hash('Aabc123', user.salt);
       user.expiredDate = new Date();
       const result = await repository.save(user);
       expect(result.id).toEqual(user.id);
@@ -68,6 +69,22 @@ describe('# User Entitiy', () => {
       const result = await repository.save(user);
       expect(result.username).toEqual('unit-test2');
       expect(result.version).toEqual(2);
+      done();
+    });
+  });
+
+  describe('Validate Hash Password', () => {
+    it('Should return true when password is valid', async (done: jest.DoneCallback) => {
+      const user = await repository.findOne({ where: { id } });
+      const isValid = await user.validatePassword('Aabc123');
+      expect(isValid).toEqual(true);
+      done();
+    });
+
+    it('Should return false when password is inValid', async (done: jest.DoneCallback) => {
+      const user = await repository.findOne({ where: { id } });
+      const isValid = await user.validatePassword('Aabc1234');
+      expect(isValid).toEqual(false);
       done();
     });
   });
