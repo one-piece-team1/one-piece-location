@@ -6,9 +6,12 @@ import { AppModule } from '../../app.module';
 import { JwtStrategy } from '../../strategy/jwt-strategy';
 import { LocationService } from '../../locations/location.service';
 import { LocationRepository } from '../../locations/location.repository';
+import { TurnRepository } from '../../turns/turn.repository';
 import { Location, Country } from '../../locations/relations';
+import { MockNeaereestNode, MockGenerateRoutesAsText, MockGenerateRoutesAsLine, ISearchForPlanStartandEndPointDto, ISearchRoutePlansDto } from '../../libs/mock';
 import { config } from '../../../config';
 import * as ELocation from '../../locations/enums';
+import * as ETurn from '../../turns/enums';
 import * as IShare from '../../interfaces';
 import { ICoordQuerySpecifc, ICoordQueryRange } from '../../locations/interfaces';
 
@@ -77,12 +80,15 @@ describe('# App', () => {
   let jwtStrategy: JwtStrategy;
   let locationService: LocationService;
   let locationRepository: LocationRepository;
+  let turnRepository: TurnRepository;
   let mockValideUser: IShare.JwtPayload;
   let mockInvalidUser: IShare.JwtPayload;
   // mock data area
   let mockLocation: Location;
   let mockCoordQuerySpecifc: ICoordQuerySpecifc;
   let mockCoordQueryRange: ICoordQueryRange;
+  let mockSearchForPlanStartandEndPointDto: ISearchForPlanStartandEndPointDto;
+  let mockSearchRoutePlansDto: ISearchRoutePlansDto;
   const mockId = '735ca6d1-7a2f-45b5-bce7-42706751d12e';
 
   beforeAll(async () => {
@@ -103,12 +109,21 @@ describe('# App', () => {
             getLocationByCoords: jest.fn(),
           },
         },
+        {
+          provide: TurnRepository,
+          useValue: {
+            getNearestPlanLineString: jest.fn(),
+            getRoutesPlanning: jest.fn(),
+            generateRoutesPlanning: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     jwtStrategy = moduleFixture.get<JwtStrategy>(JwtStrategy);
     locationService = moduleFixture.get<LocationService>(LocationService);
     locationRepository = moduleFixture.get<LocationRepository>(LocationRepository);
+    turnRepository = moduleFixture.get<TurnRepository>(TurnRepository);
     mockValideUser = {
       id: '',
       username: 'test',
@@ -367,6 +382,221 @@ describe('# App', () => {
           .set('Authorization', `Bearer ${testToken}`);
         expect(res.body.statusCode).toEqual(500);
         expect(res.body.message).toMatch(/(Internal|Server|Error)/gi);
+        done();
+      });
+    });
+  });
+
+  describe('Turn Controller Integration', () => {
+    describe('# (GET) /turns/nodes', () => {
+      afterEach(() => {
+        jest.resetAllMocks();
+        mockSearchForPlanStartandEndPointDto = null;
+      });
+
+      it('# should return error when dto is not valid', async (done: jest.DoneCallback) => {
+        jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
+        const res: ITestResponse = await request(app.getHttpServer())
+          .get('/turns/nodes')
+          .set('Authorization', `Bearer ${testToken}`);
+        expect(res.body.statusCode).toEqual(400);
+        expect(res.body.error).toEqual('Bad Request');
+        expect(res.body.message[0] as string).toMatch(/(startLocationName|must|string)/gi);
+        expect(res.body.message[1] as string).toMatch(/(endLocationName|must|string)/gi);
+        done();
+      });
+
+      it('# should return and resolve coords specific query', async (done: jest.DoneCallback) => {
+        jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
+        turnRepository.getNearestPlanLineString = jest.fn().mockReturnValue(MockNeaereestNode());
+        mockSearchForPlanStartandEndPointDto = {
+          startLocationName: "ST. MARY'S (SCILLY ISL.)",
+          endLocationName: 'MILLHAVEN',
+        };
+        const res: ITestResponse = await request(app.getHttpServer())
+          .get('/turns/nodes')
+          .query(mockSearchForPlanStartandEndPointDto)
+          .set('Authorization', `Bearer ${testToken}`);
+        expect(res.body).toEqual(MockNeaereestNode());
+        done();
+      });
+    });
+
+    describe('# (GET) /turns/plans', () => {
+      afterEach(() => {
+        jest.resetAllMocks();
+        mockSearchRoutePlansDto = null;
+      });
+
+      it('# should return error when dto is not valid', async (done: jest.DoneCallback) => {
+        jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
+        const res: ITestResponse = await request(app.getHttpServer())
+          .get('/turns/plans')
+          .set('Authorization', `Bearer ${testToken}`);
+        expect(res.body.statusCode).toEqual(400);
+        expect(res.body.error).toEqual('Bad Request');
+        expect(res.body.message[0] as string).toMatch(/(startNode|must|number)/gi);
+        expect(res.body.message[1] as string).toMatch(/(endNode|must|number)/gi);
+        expect(res.body.message[2] as string).toMatch(/(method|must|text,line)/gi);
+        done();
+      });
+
+      it('# should return and resolve coords specific query', async (done: jest.DoneCallback) => {
+        jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
+        turnRepository.getRoutesPlanning = jest.fn().mockReturnValue(undefined);
+        mockSearchRoutePlansDto = {
+          startNode: 0,
+          endNode: 0,
+          type: ETurn.EPlanType.TEXT,
+        };
+        const res: ITestResponse = await request(app.getHttpServer())
+          .get('/turns/plans')
+          .query(mockSearchRoutePlansDto)
+          .set('Authorization', `Bearer ${testToken}`);
+        expect(res.body.status).toEqual('error');
+        expect(res.body.statusCode).toEqual(404);
+        expect(res.body.message as string).toEqual('Planning not found');
+        done();
+      });
+
+      it('# should return internal server error when expection is caught', async (done: jest.DoneCallback) => {
+        jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
+        turnRepository.getRoutesPlanning = jest.fn().mockRejectedValueOnce('Internal Server Error');
+        mockSearchRoutePlansDto = {
+          startNode: 0,
+          endNode: 0,
+          type: ETurn.EPlanType.TEXT,
+        };
+        const res: ITestResponse = await request(app.getHttpServer())
+          .get('/turns/plans')
+          .query(mockSearchRoutePlansDto)
+          .set('Authorization', `Bearer ${testToken}`);
+        expect(res.body.statusCode).toEqual(500);
+        done();
+      });
+
+      it('# should be able to get routes planning as text', async (done: jest.DoneCallback) => {
+        jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
+        turnRepository.getRoutesPlanning = jest.fn().mockReturnValue(MockGenerateRoutesAsText());
+        mockSearchRoutePlansDto = {
+          startNode: 0,
+          endNode: 0,
+          type: ETurn.EPlanType.TEXT,
+        };
+        const res: ITestResponse = await request(app.getHttpServer())
+          .get('/turns/plans')
+          .query(mockSearchRoutePlansDto)
+          .set('Authorization', `Bearer ${testToken}`);
+        expect(res.body.status).toEqual('success');
+        expect(res.body.statusCode).toEqual(200);
+        expect(res.body.message).toEqual(MockGenerateRoutesAsText());
+        done();
+      });
+
+      it('# should rbe able to get routes planning as line', async (done: jest.DoneCallback) => {
+        jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
+        turnRepository.getRoutesPlanning = jest.fn().mockReturnValue(MockGenerateRoutesAsLine());
+        mockSearchRoutePlansDto = {
+          startNode: 0,
+          endNode: 0,
+          type: ETurn.EPlanType.TEXT,
+        };
+        const res: ITestResponse = await request(app.getHttpServer())
+          .get('/turns/plans')
+          .query(mockSearchRoutePlansDto)
+          .set('Authorization', `Bearer ${testToken}`);
+        expect(res.body.status).toEqual('success');
+        expect(res.body.statusCode).toEqual(200);
+        expect(res.body.message).toEqual(MockGenerateRoutesAsLine());
+        done();
+      });
+    });
+
+    describe('# (GET) /turns/plans/generates', () => {
+      afterEach(() => {
+        jest.resetAllMocks();
+        mockSearchForPlanStartandEndPointDto = null;
+      });
+
+      it('# should return error when dto is not valid', async (done: jest.DoneCallback) => {
+        jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
+        const res: ITestResponse = await request(app.getHttpServer())
+          .get('/turns/plans/generates')
+          .set('Authorization', `Bearer ${testToken}`);
+        expect(res.body.statusCode).toEqual(400);
+        expect(res.body.error).toEqual('Bad Request');
+        expect(res.body.message[0] as string).toMatch(/(startLocationName|must|string)/gi);
+        expect(res.body.message[1] as string).toMatch(/(endLocationName|must|string)/gi);
+        done();
+      });
+
+      it('# should return and resolve coords specific query', async (done: jest.DoneCallback) => {
+        jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
+        turnRepository.generateRoutesPlanning = jest.fn().mockReturnValue(undefined);
+        mockSearchForPlanStartandEndPointDto = {
+          startLocationName: '',
+          endLocationName: '',
+          type: ETurn.EPlanType.TEXT,
+        };
+        const res: ITestResponse = await request(app.getHttpServer())
+          .get('/turns/plans/generates')
+          .query(mockSearchForPlanStartandEndPointDto)
+          .set('Authorization', `Bearer ${testToken}`);
+        expect(res.body.status).toEqual('error');
+        expect(res.body.statusCode).toEqual(404);
+        expect(res.body.message as string).toEqual('Planning not found');
+        done();
+      });
+
+      it('# should return internal server error when expection is caught', async (done: jest.DoneCallback) => {
+        jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
+        turnRepository.generateRoutesPlanning = jest.fn().mockRejectedValueOnce('Internal Server Error');
+        mockSearchForPlanStartandEndPointDto = {
+          startLocationName: "ST. MARY'S (SCILLY ISL.)",
+          endLocationName: 'MILLHAVEN',
+          type: ETurn.EPlanType.TEXT,
+        };
+        const res: ITestResponse = await request(app.getHttpServer())
+          .get('/turns/plans/generates')
+          .query(mockSearchForPlanStartandEndPointDto)
+          .set('Authorization', `Bearer ${testToken}`);
+        expect(res.body.statusCode).toEqual(500);
+        done();
+      });
+
+      it('# should be able to get routes planning as text', async (done: jest.DoneCallback) => {
+        jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
+        turnRepository.generateRoutesPlanning = jest.fn().mockReturnValue(MockGenerateRoutesAsText());
+        mockSearchForPlanStartandEndPointDto = {
+          startLocationName: "ST. MARY'S (SCILLY ISL.)",
+          endLocationName: 'MILLHAVEN',
+          type: ETurn.EPlanType.TEXT,
+        };
+        const res: ITestResponse = await request(app.getHttpServer())
+          .get('/turns/plans/generates')
+          .query(mockSearchForPlanStartandEndPointDto)
+          .set('Authorization', `Bearer ${testToken}`);
+        expect(res.body.status).toEqual('success');
+        expect(res.body.statusCode).toEqual(200);
+        expect(res.body.message).toEqual(MockGenerateRoutesAsText());
+        done();
+      });
+
+      it('# should rbe able to get routes planning as line', async (done: jest.DoneCallback) => {
+        jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
+        turnRepository.generateRoutesPlanning = jest.fn().mockReturnValue(MockGenerateRoutesAsLine());
+        mockSearchForPlanStartandEndPointDto = {
+          startLocationName: "ST. MARY'S (SCILLY ISL.)",
+          endLocationName: 'MILLHAVEN',
+          type: ETurn.EPlanType.TEXT,
+        };
+        const res: ITestResponse = await request(app.getHttpServer())
+          .get('/turns/plans/generates')
+          .query(mockSearchForPlanStartandEndPointDto)
+          .set('Authorization', `Bearer ${testToken}`);
+        expect(res.body.status).toEqual('success');
+        expect(res.body.statusCode).toEqual(200);
+        expect(res.body.message).toEqual(MockGenerateRoutesAsLine());
         done();
       });
     });
