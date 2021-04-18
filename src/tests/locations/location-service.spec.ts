@@ -5,6 +5,12 @@ import { LocationService } from '../../locations/location.service';
 import { LocationRepository } from '../../locations/location.repository';
 import * as ELocation from '../../locations/enums';
 import { ICoordQuerySpecifc } from '../../locations/interfaces';
+import { HttpException, HttpStatus } from '@nestjs/common';
+
+interface IServerCustomExpcetion {
+  status: number;
+  error: string;
+}
 
 describe('# Location Service', () => {
   let locationService: LocationService;
@@ -73,19 +79,19 @@ describe('# Location Service', () => {
 
   describe('# Get Location By Id', () => {
     it('Should throw excetipion when user licence is malware', async (done: jest.DoneCallback) => {
-      const response = await locationService.getLocationById({ username: 'test', licence: 'test' }, { id: '123' });
-      expect(response.statusCode).toEqual(406);
-      expect(response.status).toEqual('error');
-      expect(response.message).toEqual('Not acceptable licence');
+      const result = await locationService.getLocationById({ username: 'test', licence: 'test' }, { id: '123' });
+      const resultResponse = (result as HttpException).getResponse() as IServerCustomExpcetion;
+      expect(resultResponse.status).toEqual(HttpStatus.NOT_ACCEPTABLE);
+      expect(resultResponse.error).toEqual('Not acceptable licence');
       done();
     });
 
     it('Should return custom expection when location not found', async (done: jest.DoneCallback) => {
       locationRepository.getLocationById = jest.fn().mockReturnValue(undefined);
-      const response = await locationService.getLocationById({ username: 'test', licence: 'onepiece' }, { id: '123' });
-      expect(response.statusCode).toEqual(404);
-      expect(response.status).toEqual('error');
-      expect(response.message).toEqual('Location 123 not found');
+      const result = await locationService.getLocationById({ username: 'test', licence: 'onepiece' }, { id: '123' });
+      const resultResponse = (result as HttpException).getResponse() as IServerCustomExpcetion;
+      expect(resultResponse.status).toEqual(HttpStatus.NOT_FOUND);
+      expect(resultResponse.error).toEqual('Location 123 not found');
       done();
     });
 
@@ -97,22 +103,21 @@ describe('# Location Service', () => {
     });
 
     it('Should return internal server error when exception is caught', async (done: jest.DoneCallback) => {
-      locationRepository.getLocationById = jest.fn().mockRejectedValue('Server Error');
-      try {
-        await locationService.getLocationById({ username: 'test', licence: 'onepiece' }, { id: '123' });
-      } catch (error) {
-        expect(error.message).toMatch(/(Internal|Server|Error)/gi);
-      }
+      locationRepository.getLocationById = jest.fn().mockRejectedValue(new Error('Internal Server Error'));
+      const result = await locationService.getLocationById({ username: 'test', licence: 'onepiece' }, { id: '123' });
+      const resultResponse = (result as HttpException).getResponse() as IServerCustomExpcetion;
+      expect(resultResponse.status).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(resultResponse.error).toEqual('Internal Server Error');
       done();
     });
   });
 
   describe('# Get Location With Search', () => {
     it('Should throw excetipion when user licence is malware', async (done: jest.DoneCallback) => {
-      const response = await locationService.getLocationsWithNameSearch({ username: 'test', licence: 'test' }, {});
-      expect(response.statusCode).toEqual(406);
-      expect(response.status).toEqual('error');
-      expect(response.message).toEqual('Not acceptable licence');
+      const result = await locationService.getLocationsWithNameSearch({ username: 'test', licence: 'test' }, {});
+      const resultResponse = (result as HttpException).getResponse() as IServerCustomExpcetion;
+      expect(resultResponse.status).toEqual(HttpStatus.NOT_ACCEPTABLE);
+      expect(resultResponse.error).toEqual('Not acceptable licence');
       done();
     });
 
@@ -127,31 +132,31 @@ describe('# Location Service', () => {
     });
 
     it('Should return internal server error when exception is caught', async (done: jest.DoneCallback) => {
-      locationRepository.getLocationsWithNameSearch = jest.fn().mockRejectedValue('Server Error');
-      try {
-        await locationService.getLocationsWithNameSearch({ username: 'test', licence: 'onepiece' }, {});
-      } catch (error) {
-        expect(error.message).toMatch(/(Internal|Server|Error)/gi);
-      }
+      locationRepository.getLocationsWithNameSearch = jest.fn().mockRejectedValue(new Error('Internal Server Error'));
+      const result = await locationService.getLocationsWithNameSearch({ username: 'test', licence: 'onepiece' }, {});
+      const resultResponse = (result as HttpException).getResponse() as IServerCustomExpcetion;
+      expect(resultResponse.status).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(resultResponse.error).toEqual('Internal Server Error');
       done();
     });
   });
 
   describe('# Get Location by Coords', () => {
     it('Should throw excetipion when user licence is malware', async (done: jest.DoneCallback) => {
-      const response = await locationService.getLocationByCoords({ username: 'test', licence: 'test' }, { lat: 111.09098, lon: 111.33223, method: ELocation.ELocationCoordQueryMethod.SPECIFIC });
-      expect(response.statusCode).toEqual(406);
-      expect(response.status).toEqual('error');
-      expect(response.message).toEqual('Not acceptable licence');
+      const result = await locationService.getLocationByCoords({ username: 'test', licence: 'test' }, { lat: 111.09098, lon: 111.33223, method: ELocation.ELocationCoordQueryMethod.SPECIFIC });
+      const resultResponse = (result as HttpException).getResponse() as IServerCustomExpcetion;
+      expect(resultResponse.status).toEqual(HttpStatus.NOT_ACCEPTABLE);
+      expect(resultResponse.error).toEqual('Not acceptable licence');
       done();
     });
 
     it('Should return custom expection when locations not found', async (done: jest.DoneCallback) => {
       locationRepository.getLocationByCoords = jest.fn().mockReturnValue(undefined);
-      const response = await locationService.getLocationByCoords({ username: 'test', licence: 'onepiece' }, { lat: 111.09098, lon: 111.33223, method: ELocation.ELocationCoordQueryMethod.SPECIFIC });
-      expect(response.statusCode).toEqual(404);
-      expect(response.status).toEqual('error');
-      expect(response.message).toEqual('Location not found for lat 111.09098 and lon 111.33223');
+      const result = await locationService.getLocationByCoords({ username: 'test', licence: 'onepiece' }, { lat: 111.09098, lon: 111.33223, method: ELocation.ELocationCoordQueryMethod.SPECIFIC });
+      const resultResponse = (result as HttpException).getResponse() as IServerCustomExpcetion;
+      expect(resultResponse.status).toEqual(HttpStatus.NOT_FOUND);
+      expect(resultResponse.status).toEqual(HttpStatus.NOT_FOUND);
+      expect(resultResponse.error).toEqual('Location not found for lat 111.09098 and lon 111.33223');
       done();
     });
 
@@ -166,12 +171,11 @@ describe('# Location Service', () => {
     });
 
     it('Should return internal server error when exception is caught', async (done: jest.DoneCallback) => {
-      locationRepository.getLocationByCoords = jest.fn().mockRejectedValue('Server Error');
-      try {
-        await locationService.getLocationByCoords({ username: 'test', licence: 'onepiece' }, { lat: 111.09098, lon: 111.33223, method: ELocation.ELocationCoordQueryMethod.SPECIFIC });
-      } catch (error) {
-        expect(error.message).toMatch(/(Internal|Server|Error)/gi);
-      }
+      locationRepository.getLocationByCoords = jest.fn().mockRejectedValue(new Error('Internal Server Error'));
+      const result = await locationService.getLocationByCoords({ username: 'test', licence: 'onepiece' }, { lat: 111.09098, lon: 111.33223, method: ELocation.ELocationCoordQueryMethod.SPECIFIC });
+      const resultResponse = (result as HttpException).getResponse() as IServerCustomExpcetion;
+      expect(resultResponse.status).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(resultResponse.error).toEqual('Internal Server Error');
       done();
     });
   });

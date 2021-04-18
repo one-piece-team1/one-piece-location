@@ -198,12 +198,12 @@ describe('# App', () => {
 
       it('# should return error when user is not a valid licence issuer', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockInvalidUser);
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/locations')
           .set('Authorization', `Bearer ${testToken}`);
-        expect(res.body.statusCode).toEqual(406);
-        expect(res.body.status).toEqual('error');
-        expect(res.body.message).toEqual('Not acceptable licence');
+        expect(res.body.status).toEqual(HttpStatus.NOT_ACCEPTABLE);
+        expect(res.body.response.status).toEqual(HttpStatus.NOT_ACCEPTABLE);
+        expect(res.body.response.error).toEqual('Not acceptable licence');
         done();
       });
 
@@ -224,12 +224,13 @@ describe('# App', () => {
 
       it('# should return internal server error when exception is caught', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
-        locationRepository.getLocationsWithNameSearch = jest.fn().mockRejectedValue('Server Error');
-        const res: ITestResponse = await request(app.getHttpServer())
+        locationRepository.getLocationsWithNameSearch = jest.fn().mockRejectedValue(new Error('Internal Server Error'));
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/locations')
           .set('Authorization', `Bearer ${testToken}`);
-        expect(res.body.statusCode).toEqual(500);
-        expect(res.body.message).toMatch(/(Internal|Server|Error)/gi);
+        expect(res.body.status).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+        expect(res.body.response.status).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+        expect(res.body.response.error).toMatch(/(Internal|Server|Error)/gi);
         done();
       });
     });
@@ -264,7 +265,7 @@ describe('# App', () => {
       it('# should return and resolve coords specific query', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
         locationRepository.getLocationByCoords = jest.fn().mockReturnValue(undefined);
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/locations/coordinates')
           .query({
             lat: mockCoordQuerySpecifc.lat.toString(),
@@ -272,16 +273,16 @@ describe('# App', () => {
             method: 'specific',
           })
           .set('Authorization', `Bearer ${testToken}`);
-        expect(res.body.statusCode).toEqual(404);
-        expect(res.body.status).toEqual('error');
-        expect(res.body.message).toEqual(`Location not found for lat ${mockCoordQuerySpecifc.lat} and lon ${mockCoordQuerySpecifc.lon}`);
+        expect(res.body.status).toEqual(HttpStatus.NOT_FOUND);
+        expect(res.body.response.status).toEqual(HttpStatus.NOT_FOUND);
+        expect(res.body.response.error).toEqual(`Location not found for lat ${mockCoordQuerySpecifc.lat} and lon ${mockCoordQuerySpecifc.lon}`);
         done();
       });
 
       it('# should return and resolve coords specific query', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
         locationRepository.getLocationByCoords = jest.fn().mockReturnValue(undefined);
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/locations/coordinates')
           .query({
             lat: mockCoordQuerySpecifc.lat.toString(),
@@ -289,9 +290,9 @@ describe('# App', () => {
             method: 'specific',
           })
           .set('Authorization', `Bearer ${testToken}`);
-        expect(res.body.statusCode).toEqual(404);
-        expect(res.body.status).toEqual('error');
-        expect(res.body.message).toEqual(`Location not found for lat ${mockCoordQuerySpecifc.lat} and lon ${mockCoordQuerySpecifc.lon}`);
+        expect(res.body.status).toEqual(HttpStatus.NOT_FOUND);
+        expect(res.body.response.status).toEqual(HttpStatus.NOT_FOUND);
+        expect(res.body.response.error).toEqual(`Location not found for lat ${mockCoordQuerySpecifc.lat} and lon ${mockCoordQuerySpecifc.lon}`);
         done();
       });
 
@@ -318,8 +319,8 @@ describe('# App', () => {
 
       it('# should return internal server error when exception is caught', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
-        locationRepository.getLocationByCoords = jest.fn().mockRejectedValue('Server Error');
-        const res: ITestResponse = await request(app.getHttpServer())
+        locationRepository.getLocationByCoords = jest.fn().mockRejectedValue(new Error('Internal Server Error'));
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/locations/coordinates')
           .query({
             lat: mockCoordQuerySpecifc.lat.toString(),
@@ -327,8 +328,8 @@ describe('# App', () => {
             method: 'specific',
           })
           .set('Authorization', `Bearer ${testToken}`);
-        expect(res.body.statusCode).toEqual(500);
-        expect(res.body.message).toMatch(/(Internal|Server|Error)/gi);
+        expect(res.body.status).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+        expect(res.body.response.error).toMatch(/(Internal|Server|Error)/gi);
         done();
       });
     });
@@ -345,7 +346,7 @@ describe('# App', () => {
 
       it('# should return error when user is not a valid licence issuer', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/locations/123')
           .set('Authorization', `Bearer ${testToken}`);
         expect(res.body.statusCode).toEqual(400);
@@ -355,24 +356,24 @@ describe('# App', () => {
 
       it('# should return error when user is not a valid licence issuer', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockInvalidUser);
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get(`/locations/${mockId}`)
           .set('Authorization', `Bearer ${testToken}`);
-        expect(res.body.statusCode).toEqual(406);
-        expect(res.body.status).toEqual('error');
-        expect(res.body.message).toEqual('Not acceptable licence');
+        expect(res.body.status).toEqual(HttpStatus.NOT_ACCEPTABLE);
+        expect(res.body.response.status).toEqual(HttpStatus.NOT_ACCEPTABLE);
+        expect(res.body.response.error).toEqual('Not acceptable licence');
         done();
       });
 
       it('# should return custom expection when location not found', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
         locationRepository.getLocationById = jest.fn().mockReturnValue(undefined);
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get(`/locations/${mockId}`)
           .set('Authorization', `Bearer ${testToken}`);
-        expect(res.body.statusCode).toEqual(404);
-        expect(res.body.status).toEqual('error');
-        expect(res.body.message).toEqual(`Location ${mockId} not found`);
+        expect(res.body.status).toEqual(HttpStatus.NOT_FOUND);
+        expect(res.body.response.status).toEqual(HttpStatus.NOT_FOUND);
+        expect(res.body.response.error).toEqual(`Location ${mockId} not found`);
         done();
       });
 
@@ -390,12 +391,12 @@ describe('# App', () => {
 
       it('# should return internal server error when exception is caught', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
-        locationRepository.getLocationById = jest.fn().mockRejectedValue('Server Error');
-        const res: ITestResponse = await request(app.getHttpServer())
+        locationRepository.getLocationById = jest.fn().mockRejectedValue(new Error('Internal Server Error'));
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get(`/locations/${mockId}`)
           .set('Authorization', `Bearer ${testToken}`);
-        expect(res.body.statusCode).toEqual(500);
-        expect(res.body.message).toMatch(/(Internal|Server|Error)/gi);
+        expect(res.body.status).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+        expect(res.body.response.error).toMatch(/(Internal|Server|Error)/gi);
         done();
       });
     });
