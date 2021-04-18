@@ -1,9 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import { TurnService } from '../../turns/turn.service';
 import { TurnRepository } from '../../turns/turn.repository';
 import { MockNeaereestNode, MockGenerateRoutesAsText, MockGenerateRoutesAsLine, ISearchForPlanStartandEndPointDto, ISearchRoutePlansDto } from '../../libs/mock';
 import * as ELocation from '../../turns/enums';
+import * as IShare from '../../interfaces';
 import * as ITurn from '../../turns/interfaces';
+
+interface IServerCustomExpcetion {
+  status: number;
+  error: string;
+}
 
 describe('# Turn Serivce', () => {
   let turnService: TurnService;
@@ -64,10 +71,10 @@ describe('# Turn Serivce', () => {
         type: ELocation.EPlanType.TEXT,
       };
       turnRepository.getRoutesPlanning = jest.fn().mockReturnValueOnce(undefined);
-      const res = await turnService.getRoutesPlanning(mockSearchRoutePlansDto);
-      expect(res.statusCode).toEqual(404);
-      expect(res.status).toEqual('error');
-      expect(res.message).toEqual('Planning not found');
+      const result = await turnService.getRoutesPlanning(mockSearchRoutePlansDto);
+      const resultResponse = (result as HttpException).getResponse() as IServerCustomExpcetion;
+      expect(resultResponse.status).toEqual(HttpStatus.NOT_FOUND);
+      expect(resultResponse.error).toEqual('Planning not found');
       done();
     });
 
@@ -77,12 +84,11 @@ describe('# Turn Serivce', () => {
         endNode: 0,
         type: ELocation.EPlanType.TEXT,
       };
-      turnRepository.getRoutesPlanning = jest.fn().mockRejectedValueOnce('Internal Server Error');
-      try {
-        await turnService.getRoutesPlanning(mockSearchRoutePlansDto);
-      } catch (error) {
-        expect(error.message).toMatch(/(Internal|Server|Error)/gi);
-      }
+      turnRepository.getRoutesPlanning = jest.fn().mockRejectedValueOnce(new Error('Internal Server Error'));
+      const result = await turnService.getRoutesPlanning(mockSearchRoutePlansDto);
+      const resultResponse = (result as HttpException).getResponse() as IServerCustomExpcetion;
+      expect(resultResponse.status).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(resultResponse.error).toEqual('Internal Server Error');
       done();
     });
 
@@ -93,10 +99,11 @@ describe('# Turn Serivce', () => {
         type: ELocation.EPlanType.TEXT,
       };
       turnRepository.getRoutesPlanning = jest.fn().mockReturnValueOnce(MockGenerateRoutesAsText());
-      const res = await turnService.getRoutesPlanning(mockSearchRoutePlansDto);
-      expect(res.statusCode).toEqual(200);
-      expect(res.status).toEqual('success');
-      expect(res.message as ITurn.INetworkGeometryResponse[]).toEqual(MockGenerateRoutesAsText());
+      const result = await turnService.getRoutesPlanning(mockSearchRoutePlansDto);
+      const resultResponse = result as IShare.IResponseBase<ITurn.INetworkGeometryResponse[]>;
+      expect(resultResponse.statusCode).toEqual(200);
+      expect(resultResponse.status).toEqual('success');
+      expect(resultResponse.message as ITurn.INetworkGeometryResponse[]).toEqual(MockGenerateRoutesAsText());
       done();
     });
 
@@ -107,10 +114,11 @@ describe('# Turn Serivce', () => {
         type: ELocation.EPlanType.LINE,
       };
       turnRepository.getRoutesPlanning = jest.fn().mockReturnValueOnce(MockGenerateRoutesAsLine());
-      const res = await turnService.getRoutesPlanning(mockSearchRoutePlansDto);
-      expect(res.statusCode).toEqual(200);
-      expect(res.status).toEqual('success');
-      expect(res.message as ITurn.INetworkGeometryResponse[]).toEqual(MockGenerateRoutesAsLine());
+      const result = await turnService.getRoutesPlanning(mockSearchRoutePlansDto);
+      const resultResponse = result as IShare.IResponseBase<ITurn.INetworkGeometryResponse[]>;
+      expect(resultResponse.statusCode).toEqual(200);
+      expect(resultResponse.status).toEqual('success');
+      expect(resultResponse.message as ITurn.INetworkGeometryResponse[]).toEqual(MockGenerateRoutesAsLine());
       done();
     });
   });
@@ -123,10 +131,10 @@ describe('# Turn Serivce', () => {
         type: ELocation.EPlanType.TEXT,
       };
       turnRepository.generateRoutesPlanning = jest.fn().mockReturnValueOnce(undefined);
-      const res = await turnService.generateRoutesPlanning(mockSearchForPlanStartandEndPointDto);
-      expect(res.statusCode).toEqual(404);
-      expect(res.status).toEqual('error');
-      expect(res.message).toEqual('Planning not found');
+      const result = await turnService.generateRoutesPlanning(mockSearchForPlanStartandEndPointDto);
+      const resultResponse = (result as HttpException).getResponse() as IServerCustomExpcetion;
+      expect(resultResponse.status).toEqual(HttpStatus.NOT_FOUND);
+      expect(resultResponse.error).toEqual('Planning not found');
       done();
     });
 
@@ -136,12 +144,11 @@ describe('# Turn Serivce', () => {
         endLocationName: 'MILLHAVEN',
         type: ELocation.EPlanType.TEXT,
       };
-      turnRepository.generateRoutesPlanning = jest.fn().mockRejectedValueOnce('Internal Server Error');
-      try {
-        await turnService.generateRoutesPlanning(mockSearchForPlanStartandEndPointDto);
-      } catch (error) {
-        expect(error.message).toMatch(/(Internal|Server|Error)/gi);
-      }
+      turnRepository.generateRoutesPlanning = jest.fn().mockRejectedValueOnce(new Error('Internal Server Error'));
+      const result = await turnService.generateRoutesPlanning(mockSearchForPlanStartandEndPointDto);
+      const resultResponse = (result as HttpException).getResponse() as IServerCustomExpcetion;
+      expect(resultResponse.status).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(resultResponse.error).toEqual('Internal Server Error');
       done();
     });
 
@@ -152,10 +159,11 @@ describe('# Turn Serivce', () => {
         type: ELocation.EPlanType.TEXT,
       };
       turnRepository.generateRoutesPlanning = jest.fn().mockReturnValueOnce(MockGenerateRoutesAsText());
-      const res = await turnService.generateRoutesPlanning(mockSearchForPlanStartandEndPointDto);
-      expect(res.statusCode).toEqual(200);
-      expect(res.status).toEqual('success');
-      expect(res.message as ITurn.INetworkGeometryResponse[]).toEqual(MockGenerateRoutesAsText());
+      const result = await turnService.generateRoutesPlanning(mockSearchForPlanStartandEndPointDto);
+      const resultResponse = result as IShare.IResponseBase<ITurn.INetworkGeometryResponse[]>;
+      expect(resultResponse.statusCode).toEqual(200);
+      expect(resultResponse.status).toEqual('success');
+      expect(resultResponse.message as ITurn.INetworkGeometryResponse[]).toEqual(MockGenerateRoutesAsText());
       done();
     });
 
@@ -166,10 +174,11 @@ describe('# Turn Serivce', () => {
         type: ELocation.EPlanType.LINE,
       };
       turnRepository.generateRoutesPlanning = jest.fn().mockReturnValueOnce(MockGenerateRoutesAsLine());
-      const res = await turnService.generateRoutesPlanning(mockSearchForPlanStartandEndPointDto);
-      expect(res.statusCode).toEqual(200);
-      expect(res.status).toEqual('success');
-      expect(res.message as ITurn.INetworkGeometryResponse[]).toEqual(MockGenerateRoutesAsLine());
+      const result = await turnService.generateRoutesPlanning(mockSearchForPlanStartandEndPointDto);
+      const resultResponse = result as IShare.IResponseBase<ITurn.INetworkGeometryResponse[]>;
+      expect(resultResponse.statusCode).toEqual(200);
+      expect(resultResponse.status).toEqual('success');
+      expect(resultResponse.message as ITurn.INetworkGeometryResponse[]).toEqual(MockGenerateRoutesAsLine());
       done();
     });
   });

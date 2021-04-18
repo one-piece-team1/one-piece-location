@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { v4 as uuidv4 } from 'uuid';
 import { AppModule } from '../../app.module';
@@ -19,7 +19,21 @@ interface IValidatorError {
   error?: string;
 }
 
-type TBody = IShare.IResponseBase<any> & IValidatorError;
+interface ICustomError extends IValidatorError {
+  statusCode?: number;
+  response?: {
+    status?: number;
+    error?: string;
+  };
+  status?: number;
+  message?: string;
+}
+
+type TBody = IShare.IResponseBase<any>;
+
+interface ICustomErrorResponse {
+  body: ICustomError;
+}
 
 interface ITestResponse {
   body: TBody;
@@ -236,7 +250,7 @@ describe('# App', () => {
 
       it('# should return error when dto lat is not valid', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockInvalidUser);
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/locations/coordinates')
           .set('Authorization', `Bearer ${testToken}`);
         expect(res.body.statusCode).toEqual(400);
@@ -396,7 +410,7 @@ describe('# App', () => {
 
       it('# should return error when dto is not valid', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/turns/nodes')
           .set('Authorization', `Bearer ${testToken}`);
         expect(res.body.statusCode).toEqual(400);
@@ -430,7 +444,7 @@ describe('# App', () => {
 
       it('# should return error when dto is not valid', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/turns/plans')
           .set('Authorization', `Bearer ${testToken}`);
         expect(res.body.statusCode).toEqual(400);
@@ -441,7 +455,7 @@ describe('# App', () => {
         done();
       });
 
-      it('# should return and resolve coords specific query', async (done: jest.DoneCallback) => {
+      it('# should return Planning not found specific query', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
         turnRepository.getRoutesPlanning = jest.fn().mockReturnValue(undefined);
         mockSearchRoutePlansDto = {
@@ -449,29 +463,31 @@ describe('# App', () => {
           endNode: 0,
           type: ETurn.EPlanType.TEXT,
         };
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/turns/plans')
           .query(mockSearchRoutePlansDto)
           .set('Authorization', `Bearer ${testToken}`);
-        expect(res.body.status).toEqual('error');
-        expect(res.body.statusCode).toEqual(404);
-        expect(res.body.message as string).toEqual('Planning not found');
+        expect(res.body.status).toEqual(HttpStatus.NOT_FOUND);
+        expect(res.body.response.status).toEqual(HttpStatus.NOT_FOUND);
+        expect(res.body.response.error).toEqual('Planning not found');
+        expect(res.body.message as string).toEqual('Http Exception');
         done();
       });
 
       it('# should return internal server error when expection is caught', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
-        turnRepository.getRoutesPlanning = jest.fn().mockRejectedValueOnce('Internal Server Error');
+        turnRepository.getRoutesPlanning = jest.fn().mockRejectedValueOnce(new Error('Internal Server Error'));
         mockSearchRoutePlansDto = {
           startNode: 0,
           endNode: 0,
           type: ETurn.EPlanType.TEXT,
         };
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/turns/plans')
           .query(mockSearchRoutePlansDto)
           .set('Authorization', `Bearer ${testToken}`);
-        expect(res.body.statusCode).toEqual(500);
+        expect(res.body.status).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+        expect(res.body.response.error).toEqual('Internal Server Error');
         done();
       });
 
@@ -520,7 +536,7 @@ describe('# App', () => {
 
       it('# should return error when dto is not valid', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/turns/plans/generates')
           .set('Authorization', `Bearer ${testToken}`);
         expect(res.body.statusCode).toEqual(400);
@@ -530,7 +546,7 @@ describe('# App', () => {
         done();
       });
 
-      it('# should return and resolve coords specific query', async (done: jest.DoneCallback) => {
+      it('# should return Planning not found specific query', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
         turnRepository.generateRoutesPlanning = jest.fn().mockReturnValue(undefined);
         mockSearchForPlanStartandEndPointDto = {
@@ -538,29 +554,31 @@ describe('# App', () => {
           endLocationName: '',
           type: ETurn.EPlanType.TEXT,
         };
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/turns/plans/generates')
           .query(mockSearchForPlanStartandEndPointDto)
           .set('Authorization', `Bearer ${testToken}`);
-        expect(res.body.status).toEqual('error');
-        expect(res.body.statusCode).toEqual(404);
-        expect(res.body.message as string).toEqual('Planning not found');
+        expect(res.body.status).toEqual(HttpStatus.NOT_FOUND);
+        expect(res.body.response.status).toEqual(HttpStatus.NOT_FOUND);
+        expect(res.body.response.error).toEqual('Planning not found');
+        expect(res.body.message as string).toEqual('Http Exception');
         done();
       });
 
       it('# should return internal server error when expection is caught', async (done: jest.DoneCallback) => {
         jwtStrategy.validate = jest.fn().mockReturnValue(mockValideUser);
-        turnRepository.generateRoutesPlanning = jest.fn().mockRejectedValueOnce('Internal Server Error');
+        turnRepository.generateRoutesPlanning = jest.fn().mockRejectedValueOnce(new Error('Internal Server Error'));
         mockSearchForPlanStartandEndPointDto = {
           startLocationName: "ST. MARY'S (SCILLY ISL.)",
           endLocationName: 'MILLHAVEN',
           type: ETurn.EPlanType.TEXT,
         };
-        const res: ITestResponse = await request(app.getHttpServer())
+        const res: ICustomErrorResponse = await request(app.getHttpServer())
           .get('/turns/plans/generates')
           .query(mockSearchForPlanStartandEndPointDto)
           .set('Authorization', `Bearer ${testToken}`);
-        expect(res.body.statusCode).toEqual(500);
+        expect(res.body.status).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+        expect(res.body.response.error).toEqual('Internal Server Error');
         done();
       });
 
