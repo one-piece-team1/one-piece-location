@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Location } from './relations';
 import { LocationRepository } from './location.repository';
@@ -20,24 +20,42 @@ export class LocationService {
    * @public
    * @param {IShare.JwtPayload} user
    * @param {GetLocationById} getLocationById
-   * @returns {Promise<IShare.IResponseBase<Location | string>>}
+   * @returns {Promise<IShare.IResponseBase<Location> | HttpException>}
    */
-  public async getLocationById(user: IShare.JwtPayload, getLocationById: GetLocationById): Promise<IShare.IResponseBase<Location | string>> {
+  public async getLocationById(user: IShare.JwtPayload, getLocationById: GetLocationById): Promise<IShare.IResponseBase<Location> | HttpException> {
     // if can not recognize user payload licence then throw not acceptable
     if (!Object.values(ELicence).includes(user.licence as ELicence)) {
       this.logger.error('Not acceptable licence', '', 'GetLocationByIdError');
-      return this.httPResponse.NotAcceptableError('Not acceptable licence');
+      return new HttpException(
+        {
+          status: HttpStatus.NOT_ACCEPTABLE,
+          error: 'Not acceptable licence',
+        },
+        HttpStatus.NOT_ACCEPTABLE,
+      );
     }
     try {
       const location: Location = await this.locationRepository.getLocationById(getLocationById);
       if (!location) {
         this.logger.error(`Location ${getLocationById.id} not found`, '', 'GetLocationByIdError');
-        return this.httPResponse.NotFoundError(`Location ${getLocationById.id} not found`);
+        return new HttpException(
+          {
+            status: HttpStatus.NOT_FOUND,
+            error: `Location ${getLocationById.id} not found`,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
       return this.httPResponse.StatusOK(location);
     } catch (error) {
       this.logger.error(error.message, '', 'GetLocationByIdError');
-      throw new InternalServerErrorException(error.message);
+      return new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -46,13 +64,19 @@ export class LocationService {
    * @public
    * @param {IShare.JwtPayload} user
    * @param {IShare.ISearch} searchReq
-   * @returns {Promise<IShare.IResponseBase<IShare.ILocationPagingResponseBase<Location[]> | string>>}
+   * @returns {Promise<IShare.IResponseBase<IShare.ILocationPagingResponseBase<Location[]>> | HttpException>}
    */
-  public async getLocationsWithNameSearch(user: IShare.JwtPayload, searchReq: IShare.ISearch): Promise<IShare.IResponseBase<IShare.ILocationPagingResponseBase<Location[]> | string>> {
+  public async getLocationsWithNameSearch(user: IShare.JwtPayload, searchReq: IShare.ISearch): Promise<IShare.IResponseBase<IShare.ILocationPagingResponseBase<Location[]>> | HttpException> {
     // if can not recognize user payload licence then throw not acceptable
     if (!Object.values(ELicence).includes(user.licence as ELicence)) {
       this.logger.error('Not acceptable licence', '', 'GetLocationsWithNameSearchError');
-      return this.httPResponse.NotAcceptableError('Not acceptable licence');
+      return new HttpException(
+        {
+          status: HttpStatus.NOT_ACCEPTABLE,
+          error: 'Not acceptable licence',
+        },
+        HttpStatus.NOT_ACCEPTABLE,
+      );
     }
     // handling optional query params
     if (!searchReq.locationName) searchReq.locationName = '';
@@ -68,7 +92,13 @@ export class LocationService {
       });
     } catch (error) {
       this.logger.error(error.message, '', 'GetLocationsWithNameSearchError');
-      throw new InternalServerErrorException(error.message);
+      return new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -77,13 +107,19 @@ export class LocationService {
    * @public
    * @param {IShare.JwtPayload} user
    * @param {CoordQueryDto} coordQueryDto
-   * @returns {Promise<IShare.IResponseBase<IShare.ILocationCoordResponseBase<ICoordQueryRange[] | ICoordQuerySpecifc[]> | string>>}
+   * @returns {Promise<IShare.IResponseBase<IShare.ILocationCoordResponseBase<ICoordQueryRange[] | ICoordQuerySpecifc[]>> | HttpException>}
    */
-  public async getLocationByCoords(user: IShare.JwtPayload, coordQueryDto: CoordQueryDto): Promise<IShare.IResponseBase<IShare.ILocationCoordResponseBase<ICoordQueryRange[] | ICoordQuerySpecifc[]> | string>> {
+  public async getLocationByCoords(user: IShare.JwtPayload, coordQueryDto: CoordQueryDto): Promise<IShare.IResponseBase<IShare.ILocationCoordResponseBase<ICoordQueryRange[] | ICoordQuerySpecifc[]>> | HttpException> {
     // if can not recognize user payload licence then throw not acceptable
     if (!Object.values(ELicence).includes(user.licence as ELicence)) {
       this.logger.error('Not acceptable licence', '', 'GetLocationByCoordsError');
-      return this.httPResponse.NotAcceptableError('Not acceptable licence');
+      return new HttpException(
+        {
+          status: HttpStatus.NOT_ACCEPTABLE,
+          error: 'Not acceptable licence',
+        },
+        HttpStatus.NOT_ACCEPTABLE,
+      );
     }
     coordQueryDto.take = coordQueryDto.take ? Number(coordQueryDto.take) : 10;
     coordQueryDto.skip = coordQueryDto.skip ? Number(coordQueryDto.skip) : 0;
@@ -91,7 +127,13 @@ export class LocationService {
       const searchResult: ICoordQueryRange[] | ICoordQuerySpecifc[] = await this.locationRepository.getLocationByCoords(coordQueryDto);
       if (!searchResult) {
         this.logger.error(`Location not found for lat ${coordQueryDto.lat} and lon ${coordQueryDto.lon}`, '', 'GetLocationByCoordsError');
-        return this.httPResponse.NotFoundError(`Location not found for lat ${coordQueryDto.lat} and lon ${coordQueryDto.lon}`);
+        return new HttpException(
+          {
+            status: HttpStatus.NOT_FOUND,
+            error: `Location not found for lat ${coordQueryDto.lat} and lon ${coordQueryDto.lon}`,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
       return this.httPResponse.StatusOK({
         searchResult,
@@ -101,7 +143,13 @@ export class LocationService {
       });
     } catch (error) {
       this.logger.error(error.message, '', 'GetLocationByCoordsError');
-      throw new InternalServerErrorException(error.message);
+      return new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

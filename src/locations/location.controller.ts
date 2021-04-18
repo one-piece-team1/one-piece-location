@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, SetMetadata, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Param, Query, SetMetadata, UseGuards, ValidationPipe, HttpException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RoleGuard } from '../guards/local-guard';
 import { CurrentUser } from '../strategy/get-user.decorator';
@@ -20,12 +20,12 @@ export class LocationController {
    * @public
    * @param {IShare.JwtPayload} user
    * @param {IShare.ISearch} searchReq
-   * @returns {Promise<IShare.IResponseBase<IShare.ILocationPagingResponseBase<Location[]> | string>>}
+   * @returns {Promise<IShare.IResponseBase<IShare.ILocationPagingResponseBase<Location[]>> | HttpException>}
    */
   @Get()
   @SetMetadata('roles', [EUser.EUserRole.USER, EUser.EUserRole.VIP1, EUser.EUserRole.VIP2, EUser.EUserRole.ADMIN])
   @UseGuards(AuthGuard(['jwt']), RoleGuard)
-  getLocationsWithNameSearch(@CurrentUser() user: IShare.JwtPayload, @Query(ValidationPipe) searchReq: IShare.ISearch): Promise<IShare.IResponseBase<IShare.ILocationPagingResponseBase<Location[]> | string>> {
+  getLocationsWithNameSearch(@CurrentUser() user: IShare.JwtPayload, @Query(ValidationPipe) searchReq: IShare.ISearch): Promise<IShare.IResponseBase<IShare.ILocationPagingResponseBase<Location[]>> | HttpException> {
     return this.locationService.getLocationsWithNameSearch(user, searchReq);
   }
 
@@ -36,12 +36,12 @@ export class LocationController {
    * @public
    * @param {IShare.JwtPayload} user
    * @param {CoordQueryDto} coordQueryDto
-   * @returns {Promise<IShare.IResponseBase<IShare.ILocationCoordResponseBase<ICoordQueryRange[] | ICoordQuerySpecifc[]> | string>>}
+   * @returns {Promise<IShare.IResponseBase<IShare.ILocationCoordResponseBase<ICoordQueryRange[] | ICoordQuerySpecifc[]>> | HttpException>}
    */
   @Get('/coordinates')
   @SetMetadata('roles', [EUser.EUserRole.USER, EUser.EUserRole.VIP1, EUser.EUserRole.VIP2, EUser.EUserRole.ADMIN])
   @UseGuards(AuthGuard(['jwt']), RoleGuard)
-  getLocationByCoords(@CurrentUser() user: IShare.JwtPayload, @Query(ValidationPipe) coordQueryDto: CoordQueryDto): Promise<IShare.IResponseBase<IShare.ILocationCoordResponseBase<ICoordQueryRange[] | ICoordQuerySpecifc[]> | string>> {
+  getLocationByCoords(@CurrentUser() user: IShare.JwtPayload, @Query(ValidationPipe) coordQueryDto: CoordQueryDto): Promise<IShare.IResponseBase<IShare.ILocationCoordResponseBase<ICoordQueryRange[] | ICoordQuerySpecifc[]>> | HttpException> {
     return this.locationService.getLocationByCoords(user, coordQueryDto);
   }
 
@@ -52,12 +52,12 @@ export class LocationController {
    * @public
    * @param {IShare.JwtPayload} user
    * @param {GetLocationById} getLocationById
-   * @returns {Promise<IShare.IResponseBase<Location | string>>}
+   * @returns {Promise<IShare.IResponseBase<Location> | HttpException>}
    */
   @Get('/:id')
   @SetMetadata('roles', [EUser.EUserRole.ADMIN])
   @UseGuards(AuthGuard(['jwt']), RoleGuard)
-  getLocationById(@CurrentUser() user: IShare.JwtPayload, @Param(ValidationPipe) getLocationById: GetLocationById): Promise<IShare.IResponseBase<Location | string>> {
+  getLocationById(@CurrentUser() user: IShare.JwtPayload, @Param(ValidationPipe) getLocationById: GetLocationById): Promise<IShare.IResponseBase<Location> | HttpException> {
     return this.locationService.getLocationById(user, getLocationById);
   }
 }

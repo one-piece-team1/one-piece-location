@@ -33,14 +33,20 @@ export class TurnService {
    * @Admin
    * @public
    * @param {SearchRoutePlansDto} searchRoutePlansDto
-   * @returns {Promise<IShare.IResponseBase<ITurn.INetworkGeometryResponse[] | string>>}
+   * @returns {Promise<IShare.IResponseBase<ITurn.INetworkGeometryResponse[]> | HttpException>}
    */
-  public async getRoutesPlanning(searchRoutePlansDto: SearchRoutePlansDto): Promise<IShare.IResponseBase<ITurn.INetworkGeometryResponse[] | string>> {
+  public async getRoutesPlanning(searchRoutePlansDto: SearchRoutePlansDto): Promise<IShare.IResponseBase<ITurn.INetworkGeometryResponse[]> | HttpException> {
     try {
       const turns: ITurn.INetworkGeometryResponse[] = await this.turnRepository.getRoutesPlanning(searchRoutePlansDto);
       if (!(turns instanceof Array)) {
         this.logger.error('Planning not found', '', 'GetRoutesPlanningError');
-        return this.httPResponse.NotFoundError('Planning not found');
+        return new HttpException(
+          {
+            status: HttpStatus.NOT_FOUND,
+            error: 'Planning not found',
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
       turns.forEach((turn: ITurn.INetworkGeometryResponse) => {
         turn.lineString = utils.convertGeoTextToLineString(turn.l_str);
@@ -48,7 +54,13 @@ export class TurnService {
       return this.httPResponse.StatusOK<ITurn.INetworkGeometryResponse[]>(turns);
     } catch (error) {
       this.logger.error(error.message, '', 'GetRoutesPlanningError');
-      return this.httPResponse.InternalServerError(error.message);
+      return new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -56,14 +68,20 @@ export class TurnService {
    * @description Generate Route planning with binding nearest linestring searching and calc dijkstra
    * @public
    * @param {SearchForPlanStartandEndPointDto} searchForPlanStartandEndPointDto
-   * @returns {Promise<IShare.IResponseBase<ITurn.INetworkGeometryResponse[] | string>>}
+   * @returns {Promise<IShare.IResponseBase<ITurn.INetworkGeometryResponse[]> | HttpException>}
    */
-  public async generateRoutesPlanning(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<IShare.IResponseBase<ITurn.INetworkGeometryResponse[] | string>> {
+  public async generateRoutesPlanning(searchForPlanStartandEndPointDto: SearchForPlanStartandEndPointDto): Promise<IShare.IResponseBase<ITurn.INetworkGeometryResponse[]> | HttpException> {
     try {
       const turns: ITurn.INetworkGeometryResponse[] = await this.turnRepository.generateRoutesPlanning(searchForPlanStartandEndPointDto);
       if (!(turns instanceof Array)) {
         this.logger.error('Planning not found', '', 'GetRoutesPlanningError');
-        return this.httPResponse.NotFoundError('Planning not found');
+        return new HttpException(
+          {
+            status: HttpStatus.NOT_FOUND,
+            error: 'Planning not found',
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
       turns.forEach((turn: ITurn.INetworkGeometryResponse) => {
         turn.lineString = utils.convertGeoTextToLineString(turn.l_str);
@@ -71,7 +89,13 @@ export class TurnService {
       return this.httPResponse.StatusOK<ITurn.INetworkGeometryResponse[]>(turns);
     } catch (error) {
       this.logger.error(error.message, '', 'GetRoutesPlanningError');
-      return this.httPResponse.InternalServerError(error.message);
+      return new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
